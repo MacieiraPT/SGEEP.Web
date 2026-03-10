@@ -1,0 +1,85 @@
+@model List<SGEEP.Core.Entities.Estagio>
+@using SGEEP.Core.Enums
+@{
+    ViewData["Title"] = "Meus Estágios";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="bi bi-briefcase"></i> Meus Estágios</h2>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Aluno</th>
+                            <th>Professor</th>
+                            <th>Período</th>
+                            <th>Horas Validadas</th>
+                            <th>Estado</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in Model)
+                        {
+                            var horasValidadas = e.RegistoHoras.Where(r => r.Estado == EstadoHoras.Validado).Sum(r => r.TotalHoras);
+                            var horasPendentes = e.RegistoHoras.Count(r => r.Estado == EstadoHoras.Pendente);
+                            <tr>
+                                <td>@e.Aluno?.Nome</td>
+                                <td>@e.Professor?.Nome</td>
+                                <td>@e.DataInicio.ToString("dd/MM/yyyy") - @e.DataFim.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @horasValidadas.ToString("F1")h / @e.TotalHorasPrevistas h
+                                    @if (horasPendentes > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1">@horasPendentes pendentes</span>
+                                    }
+                                </td>
+                                <td>
+                                    @switch (e.Estado)
+                                    {
+                                        case EstadoEstagio.Pendente:
+                                            <span class="badge bg-secondary">Pendente</span>
+                                            break;
+                                        case EstadoEstagio.Ativo:
+                                            <span class="badge bg-primary">Ativo</span>
+                                            break;
+                                        case EstadoEstagio.Concluido:
+                                            <span class="badge bg-success">Concluído</span>
+                                            break;
+                                        case EstadoEstagio.Cancelado:
+                                            <span class="badge bg-danger">Cancelado</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="RegistoHoras" asp-route-id="@e.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-clock"></i> Ver Horas
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p class="mt-2">Sem estágios atribuídos.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

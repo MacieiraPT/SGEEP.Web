@@ -1,0 +1,73 @@
+﻿@model SGEEP.Web.Models.ViewModels.RelatorioViewModel
+@{
+    ViewData["Title"] = "Avaliar Relatório";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-star"></i> Avaliar Relatório
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Título</label>
+                        <p class="fw-bold">@Model.Titulo</p>
+                    </div>
+                    @if (Model.Descricao != null)
+                    {
+                        <div class="mb-3">
+                            <label class="text-muted small">Descrição</label>
+                            <p>@Model.Descricao</p>
+                        </div>
+                    }
+                    @if (Model.FicheiroPath != null)
+                    {
+                        <div class="mb-3">
+                            <a asp-action="Download" asp-route-id="@Model.Id"
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-download"></i> Download do Relatório
+                            </a>
+                        </div>
+                    }
+                    <hr />
+                    <form asp-action="Avaliar" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="EstagioId" />
+                        <div class="mb-3">
+                            <label asp-for="ComentarioProfessor" class="form-label"></label>
+                            <textarea asp-for="ComentarioProfessor" class="form-control" rows="4"
+                                      placeholder="Escreve o teu feedback sobre o relatório..."></textarea>
+                            <span asp-validation-for="ComentarioProfessor" class="text-danger small"></span>
+                        </div>
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" asp-route-estagioId="@Model.EstagioId"
+                               class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" name="acao" value="rejeitar"
+                                    class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Rejeitar
+                            </button>
+                            <button type="submit" name="acao" value="aprovar"
+                                    class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Aprovar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,63 @@
+﻿@model SGEEP.Web.Models.ViewModels.RelatorioViewModel
+@{
+    ViewData["Title"] = "Submeter Relatório";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Submeter Relatório
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="EstagioId" />
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Titulo" class="form-label"></label>
+                                <input asp-for="Titulo" class="form-control"
+                                       placeholder="Ex: Relatório Intercalar — Outubro" />
+                                <span asp-validation-for="Titulo" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Descricao" class="form-label"></label>
+                                <textarea asp-for="Descricao" class="form-control" rows="3"
+                                          placeholder="Breve descrição do conteúdo do relatório..."></textarea>
+                                <span asp-validation-for="Descricao" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Ficheiro" class="form-label"></label>
+                                <input asp-for="Ficheiro" class="form-control" type="file"
+                                       accept=".pdf,.docx,.doc" />
+                                <small class="text-muted">
+                                    Formatos aceites: PDF, DOCX. Tamanho máximo: 10MB.
+                                </small>
+                                <span asp-validation-for="Ficheiro" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" asp-route-estagioId="@Model.EstagioId"
+                               class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> Submeter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

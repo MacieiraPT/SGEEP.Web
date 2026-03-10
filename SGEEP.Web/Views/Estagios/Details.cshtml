@@ -1,0 +1,298 @@
+﻿@model SGEEP.Core.Entities.Estagio
+@using SGEEP.Core.Enums
+@{
+    ViewData["Title"] = "Detalhes do Estágio";
+    var horasCumpridas = Model.RegistoHoras
+        .Where(r => r.Estado == EstadoHoras.Validado)
+        .Sum(r => r.TotalHoras);
+    var percentagem = Model.TotalHorasPrevistas > 0
+        ? (int)((horasCumpridas / Model.TotalHorasPrevistas) * 100)
+        : 0;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center
+                    @(Model.Estado == EstadoEstagio.Ativo ? "bg-success" :
+                                           Model.Estado == EstadoEstagio.Pendente ? "bg-warning" :
+                                           Model.Estado == EstadoEstagio.Concluido ? "bg-primary" : "bg-danger") text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-briefcase"></i>
+                        Estágio — @Model.Aluno?.Nome
+                    </h5>
+                    <span class="badge bg-white text-dark fs-6">
+                        @Model.Estado
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card border-primary h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="bi bi-mortarboard"></i> Aluno
+                                </div>
+                                <div class="card-body">
+                                    <p class="fw-bold mb-1">@Model.Aluno?.Nome</p>
+                                    <p class="text-muted small mb-1">@Model.Aluno?.Email</p>
+                                    <p class="text-muted small mb-1">
+                                        Nº @Model.Aluno?.NumeroAluno — @Model.Aluno?.Turma
+                                    </p>
+                                    <span class="badge bg-secondary">
+                                        @Model.Aluno?.Curso?.Nome
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-success h-100">
+                                <div class="card-header bg-success text-white">
+                                    <i class="bi bi-building"></i> Empresa
+                                </div>
+                                <div class="card-body">
+                                    <p class="fw-bold mb-1">@Model.Empresa?.Nome</p>
+                                    <p class="text-muted small mb-1">@Model.Empresa?.Cidade</p>
+                                    <p class="text-muted small mb-1">
+                                        Tutor: @(Model.Empresa?.NomeTutor ?? "—")
+                                    </p>
+                                    <p class="text-muted small">@(Model.Empresa?.EmailTutor ?? "—")</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-warning h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <i class="bi bi-person-workspace"></i> Professor
+                                </div>
+                                <div class="card-body">
+                                    <p class="fw-bold mb-1">@Model.Professor?.Nome</p>
+                                    <p class="text-muted small">@Model.Professor?.Email</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-3">
+                            <label class="text-muted small">Data de Início</label>
+                            <p class="fw-bold">@Model.DataInicio.ToString("dd/MM/yyyy")</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted small">Data de Fim</label>
+                            <p class="fw-bold">@Model.DataFim.ToString("dd/MM/yyyy")</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted small">Local</label>
+                            <p class="fw-bold">@(Model.LocalEstagio ?? "—")</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted small">Horas Previstas</label>
+                            <p class="fw-bold">@Model.TotalHorasPrevistas h</p>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Progresso de horas -->
+                    <h6><i class="bi bi-clock"></i> Progresso de Horas</h6>
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>@horasCumpridas.ToString("F1") h cumpridas</span>
+                        <span>@Model.TotalHorasPrevistas h previstas</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 20px;">
+                        <div class="progress-bar @(percentagem >= 100 ? "bg-success" : "bg-primary")"
+                             style="width: @Math.Min(percentagem, 100)%">
+                            @percentagem%
+                        </div>
+                    </div>
+
+                    <!-- Relatórios -->
+                    <h6><i class="bi bi-file-text"></i> Relatórios (@Model.Relatorios.Count)</h6>
+                    @if (Model.Relatorios.Any())
+                    {
+                        <ul class="list-group mb-3">
+                            @foreach (var rel in Model.Relatorios)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>@rel.Titulo</span>
+                                    <span class="badge bg-secondary">@rel.Estado</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted small">Sem relatórios submetidos.</p>
+                    }
+
+                    @if (Model.Avaliacao != null)
+                    {
+                        <hr />
+                        <h6><i class="bi bi-clipboard-check"></i> Avaliação Final</h6>
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3 text-center">
+                                        <span class="text-muted small d-block">Assiduidade</span>
+                                        <span class="fs-4 fw-bold text-primary">@Model.Avaliacao.NotaAssiduidade.ToString("F1")</span>
+                                        <span class="text-muted small">/20</span>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                        <span class="text-muted small d-block">Desempenho</span>
+                                        <span class="fs-4 fw-bold text-primary">@Model.Avaliacao.NotaDesempenho.ToString("F1")</span>
+                                        <span class="text-muted small">/20</span>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                        <span class="text-muted small d-block">Relatório</span>
+                                        <span class="fs-4 fw-bold text-primary">@Model.Avaliacao.NotaRelatorio.ToString("F1")</span>
+                                        <span class="text-muted small">/20</span>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                        <span class="text-muted small d-block">Nota Final</span>
+                                        <span class="fs-4 fw-bold @(Model.Avaliacao.NotaFinal >= 10 ? "text-success" : "text-danger")">
+                                            @Model.Avaliacao.NotaFinal.ToString("F1")
+                                        </span>
+                                        <span class="text-muted small">/20</span>
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.Avaliacao.Comentarios))
+                                {
+                                    <hr />
+                                    <p class="mb-0 text-muted">
+                                        <i class="bi bi-chat-quote"></i> @Model.Avaliacao.Comentarios
+                                    </p>
+                                }
+                                <div class="text-end mt-2">
+                                    <small class="text-muted">
+                                        Avaliado em @Model.Avaliacao.DataAvaliacao.ToString("dd/MM/yyyy")
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Observacoes != null)
+                    {
+                        <hr />
+                        <h6><i class="bi bi-chat-text"></i> Observações</h6>
+                        <p class="text-muted">@Model.Observacoes</p>
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2 justify-content-end">
+                    <a asp-controller="RegistoHoras" asp-action="Index"
+                       asp-route-estagioId="@Model.Id" class="btn btn-outline-primary">
+                        <i class="bi bi-clock"></i> Ver Horas
+                    </a>
+                    <a asp-controller="Relatorios" asp-action="Index"
+                       asp-route-estagioId="@Model.Id" class="btn btn-outline-success">
+                        <i class="bi bi-file-text"></i> Ver Relatórios
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                    @if (Model.Estado == EstadoEstagio.Pendente)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                        <button type="button" class="btn btn-success"
+                                onclick="confirmarAtivar()">
+                            <i class="bi bi-play-fill"></i> Ativar Estágio
+                        </button>
+                        <button type="button" class="btn btn-danger"
+                                onclick="confirmarCancelar()">
+                            <i class="bi bi-x-lg"></i> Cancelar Estágio
+                        </button>
+                    }
+                    @if (Model.Estado == EstadoEstagio.Ativo)
+                    {
+                        <a asp-action="Concluir" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="bi bi-check2-all"></i> Concluir e Avaliar
+                        </a>
+                        <button type="button" class="btn btn-danger"
+                                onclick="confirmarCancelar()">
+                            <i class="bi bi-x-lg"></i> Cancelar Estágio
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Estado == EstadoEstagio.Pendente)
+{
+    <!-- Modal Ativar -->
+    <div class="modal fade" id="modalAtivar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-play-fill"></i> Confirmar Ativação
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Tens a certeza que queres ativar o estágio de <strong>@Model.Aluno?.Nome</strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancelar</button>
+                    <form method="post" asp-action="Ativar" asp-route-id="@Model.Id">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-play-fill"></i> Ativar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.Estado == EstadoEstagio.Pendente || Model.Estado == EstadoEstagio.Ativo)
+{
+    <!-- Modal Cancelar -->
+    <div class="modal fade" id="modalCancelar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle"></i> Confirmar Cancelamento
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Tens a certeza que queres cancelar o estágio de <strong>@Model.Aluno?.Nome</strong>?
+                    Esta ação não pode ser revertida.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Voltar</button>
+                    <form method="post" asp-action="Cancelar" asp-route-id="@Model.Id">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-x-lg"></i> Cancelar Estágio
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function confirmarAtivar() {
+            new bootstrap.Modal(document.getElementById('modalAtivar')).show();
+        }
+        function confirmarCancelar() {
+            new bootstrap.Modal(document.getElementById('modalCancelar')).show();
+        }
+    </script>
+}

@@ -1,0 +1,75 @@
+﻿@model SGEEP.Web.Models.ViewModels.ProfessorViewModel
+@{
+    ViewData["Title"] = "Editar Professor";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil"></i> Editar Professor
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Nome" class="form-label"></label>
+                                <input asp-for="Nome" class="form-control" />
+                                <span asp-validation-for="Nome" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="NIF" class="form-label"></label>
+                                <input asp-for="NIF" class="form-control" maxlength="9" />
+                                <span asp-validation-for="NIF" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Telefone" class="form-label"></label>
+                                <input asp-for="Telefone" class="form-control" />
+                                <span asp-validation-for="Telefone" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="CursoId" class="form-label"></label>
+                                <select asp-for="CursoId" asp-items="Model.Cursos"
+                                        class="form-select">
+                                    <option value="">-- Seleciona o curso que dirige --</option>
+                                </select>
+                                <span asp-validation-for="CursoId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="Ativo" class="form-check-input" />
+                                    <label asp-for="Ativo" class="form-check-label">Professor Ativo</label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-lg"></i> Atualizar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

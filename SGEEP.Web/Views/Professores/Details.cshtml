@@ -1,0 +1,61 @@
+﻿@model SGEEP.Core.Entities.Professor
+@{
+    ViewData["Title"] = "Detalhes do Professor";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white d-flex justify-content-between">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-workspace"></i> @Model.Nome
+                    </h5>
+                    <span class="badge @(Model.Ativo ? "bg-success" : "bg-danger") fs-6">
+                        @(Model.Ativo ? "Ativo" : "Inativo")
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Email</label>
+                            <p class="fw-bold">@Model.Email</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">NIF</label>
+                            <p class="fw-bold">@Model.NIF</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Telefone</label>
+                            <p class="fw-bold">@(Model.Telefone ?? "—")</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="text-muted small">Curso que Dirige</label>
+                            <p>
+                                <span class="badge bg-primary fs-6">
+                                    @Model.Curso?.Nome
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Data de Registo</label>
+                            <p class="fw-bold">@Model.DataCriacao.ToString("dd/MM/yyyy")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Estágios a Orientar</label>
+                            <p class="fw-bold">@Model.Estagios.Count</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2 justify-content-end">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,75 @@
+﻿@model SGEEP.Core.Entities.Aluno
+@{
+    ViewData["Title"] = "Detalhes do Aluno";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white d-flex justify-content-between">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge"></i> @Model.Nome
+                    </h5>
+                    <span class="badge @(Model.Ativo ? "bg-success" : "bg-danger") fs-6">
+                        @(Model.Ativo ? "Ativo" : "Inativo")
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Número de Aluno</label>
+                            <p class="fw-bold">@Model.NumeroAluno</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Email</label>
+                            <p class="fw-bold">@Model.Email</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">NIF</label>
+                            <p class="fw-bold">@Model.NIF</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Telefone</label>
+                            <p class="fw-bold">@(Model.Telefone ?? "—")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Curso</label>
+                            <p class="fw-bold">@Model.Curso</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Turma</label>
+                            <p class="fw-bold">@Model.Turma</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Data de Registo</label>
+                            <p class="fw-bold">@Model.DataCriacao.ToString("dd/MM/yyyy")</p>
+                        </div>
+                    </div>
+
+                    @if (Model.Estagios.Any())
+                    {
+                        <hr />
+                        <h6><i class="bi bi-briefcase"></i> Estágios (@Model.Estagios.Count)</h6>
+                        @foreach (var estagio in Model.Estagios)
+                        {
+                            <p class="text-muted">
+                                De @estagio.DataInicio.ToString("dd/MM/yyyy")
+                                até @estagio.DataFim.ToString("dd/MM/yyyy") —
+                                <span class="badge bg-secondary">@estagio.Estado</span>
+                            </p>
+                        }
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2 justify-content-end">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

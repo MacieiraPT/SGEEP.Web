@@ -1,0 +1,91 @@
+﻿@model SGEEP.Web.Models.ViewModels.EstagioViewModel
+@{
+    ViewData["Title"] = "Novo Estágio";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-briefcase"></i> Novo Estágio
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="AlunoId" class="form-label"></label>
+                                <select asp-for="AlunoId" asp-items="Model.Alunos"
+                                        class="form-select">
+                                    <option value="">-- Seleciona o aluno --</option>
+                                </select>
+                                <span asp-validation-for="AlunoId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="EmpresaId" class="form-label"></label>
+                                <select asp-for="EmpresaId" asp-items="Model.Empresas"
+                                        class="form-select">
+                                    <option value="">-- Seleciona a empresa --</option>
+                                </select>
+                                <span asp-validation-for="EmpresaId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="ProfessorId" class="form-label"></label>
+                                <select asp-for="ProfessorId" asp-items="Model.Professores"
+                                        class="form-select">
+                                    <option value="">-- Seleciona o professor --</option>
+                                </select>
+                                <span asp-validation-for="ProfessorId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DataInicio" class="form-label"></label>
+                                <input asp-for="DataInicio" class="form-control" type="date" />
+                                <span asp-validation-for="DataInicio" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DataFim" class="form-label"></label>
+                                <input asp-for="DataFim" class="form-control" type="date" />
+                                <span asp-validation-for="DataFim" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="LocalEstagio" class="form-label"></label>
+                                <input asp-for="LocalEstagio" class="form-control"
+                                       placeholder="Morada ou localização da empresa" />
+                                <span asp-validation-for="LocalEstagio" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="TotalHorasPrevistas" class="form-label"></label>
+                                <input asp-for="TotalHorasPrevistas" class="form-control" type="number" />
+                                <span asp-validation-for="TotalHorasPrevistas" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Observacoes" class="form-label"></label>
+                                <textarea asp-for="Observacoes" class="form-control" rows="3"
+                                          placeholder="Observações adicionais..."></textarea>
+                                <span asp-validation-for="Observacoes" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Criar Estágio
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

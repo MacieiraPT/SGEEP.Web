@@ -1,0 +1,453 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — SGEEP</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        #sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1a2a4a 0%, #1e3a5f 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+
+            #sidebar .sidebar-brand {
+                padding: 24px 20px 16px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+
+                #sidebar .sidebar-brand h4 {
+                    color: #fff;
+                    font-weight: 700;
+                    font-size: 1.3rem;
+                    margin: 0;
+                }
+
+                #sidebar .sidebar-brand span {
+                    color: #4da6ff;
+                }
+
+                #sidebar .sidebar-brand small {
+                    color: rgba(255,255,255,0.5);
+                    font-size: 0.72rem;
+                }
+
+            #sidebar .nav-section {
+                padding: 16px 16px 4px;
+                color: rgba(255,255,255,0.4);
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            #sidebar .nav-link {
+                color: rgba(255,255,255,0.75);
+                padding: 10px 20px;
+                border-radius: 8px;
+                margin: 2px 8px;
+                font-size: 0.88rem;
+                font-weight: 500;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                #sidebar .nav-link:hover {
+                    background: rgba(255,255,255,0.1);
+                    color: #fff;
+                    transform: translateX(4px);
+                }
+
+                #sidebar .nav-link.active {
+                    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                    color: #fff;
+                    box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+                }
+
+                #sidebar .nav-link i {
+                    font-size: 1rem;
+                    width: 20px;
+                    text-align: center;
+                }
+
+            /* USER CARD na sidebar */
+            #sidebar .user-card {
+                margin: 16px 12px;
+                padding: 12px;
+                background: rgba(255,255,255,0.07);
+                border-radius: 10px;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+
+                #sidebar .user-card .user-avatar {
+                    width: 36px;
+                    height: 36px;
+                    background: linear-gradient(135deg, #2563eb, #4da6ff);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                }
+
+                #sidebar .user-card .user-name {
+                    color: #fff;
+                    font-size: 0.82rem;
+                    font-weight: 600;
+                    margin: 0;
+                }
+
+                #sidebar .user-card .user-role {
+                    color: rgba(255,255,255,0.5);
+                    font-size: 0.72rem;
+                    margin: 0;
+                }
+
+        /* TOPBAR */
+        #topbar {
+            margin-left: 260px;
+            background: #fff;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            gap: 16px;
+        }
+
+            #topbar .page-title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #1a2a4a;
+                flex: 1;
+            }
+
+        /* MAIN CONTENT */
+        #main-content {
+            margin-left: 260px;
+            padding: 24px;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* CARDS */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card-header {
+            border-radius: 12px 12px 0 0 !important;
+            border-bottom: none;
+            padding: 16px 20px;
+        }
+
+        /* TABLES */
+        .table thead th {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: none;
+            padding: 12px 16px;
+        }
+
+        .table tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+            font-size: 0.88rem;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8faff;
+        }
+
+        /* BADGES */
+        .badge {
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.88rem;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+        }
+
+        /* FORMS */
+        .form-control, .form-select {
+            border-radius: 8px;
+            border-color: #e2e8f0;
+            font-size: 0.88rem;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #2563eb;
+                box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            }
+
+        /* ALERTS */
+        .alert {
+            border: none;
+            border-radius: 10px;
+            font-size: 0.88rem;
+        }
+
+        /* PROGRESS */
+        .progress {
+            border-radius: 50px;
+            background-color: #e2e8f0;
+        }
+
+        .progress-bar {
+            border-radius: 50px;
+        }
+
+        /* MOBILE */
+        @@media (max-width: 768px) {
+            #sidebar {
+                left: -260px;
+            }
+
+                #sidebar.show {
+                    left: 0;
+                }
+
+            #topbar, #main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- SIDEBAR -->
+        <nav id="sidebar">
+            <!-- Brand -->
+            <div class="sidebar-brand">
+                <h4><span>S</span>GEEP</h4>
+                <small>Sistema de Gestão de Estágios</small>
+            </div>
+
+            <!-- User Card -->
+            <div class="user-card d-flex align-items-center gap-2 mt-3">
+                <div class="user-avatar">
+                    @(User.Identity.Name?.Substring(0, 1).ToUpper())
+                </div>
+                <div>
+                    <p class="user-name">@User.Identity.Name?.Split('@')[0]</p>
+                    <p class="user-role">
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <text>Administrador</text>
+                        }
+                        else if (User.IsInRole("Professor"))
+                        {
+
+                            <text>Diretor de Curso</text>
+                        }
+                        else if (User.IsInRole("Aluno"))
+                        {
+
+                            <text>Aluno</text>
+                        }
+                        else if (User.IsInRole("Empresa"))
+                        {
+
+                            <text>Tutor de Empresa</text>
+                        }
+                        else
+                        {
+
+                            <text>Utilizador</text>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <ul class="nav flex-column mt-2 pb-4">
+
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")"
+                       asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+
+                @if (User.IsInRole("Administrador") || User.IsInRole("Professor"))
+                {
+                    <div class="nav-section">Gestão</div>
+
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Alunos" ? "active" : "")"
+                           asp-controller="Alunos" asp-action="Index">
+                            <i class="bi bi-mortarboard"></i> Alunos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Empresas" ? "active" : "")"
+                           asp-controller="Empresas" asp-action="Index">
+                            <i class="bi bi-building"></i> Empresas
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Estagios" ? "active" : "")"
+                           asp-controller="Estagios" asp-action="Index">
+                            <i class="bi bi-briefcase"></i> Estágios
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Administrador"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Professores" ? "active" : "")"
+                           asp-controller="Professores" asp-action="Index">
+                            <i class="bi bi-person-workspace"></i> Professores
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Aluno"))
+                {
+                    <div class="nav-section">O Meu Estágio</div>
+
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Estagios" ? "active" : "")"
+                           asp-controller="Aluno" asp-action="MeuEstagio">
+                            <i class="bi bi-briefcase"></i> O Meu Estágio
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Empresa"))
+                {
+                    <div class="nav-section">Portal Empresa</div>
+
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "EmpresaPortal" && ViewContext.RouteData.Values["action"]?.ToString() == "MeusEstagios" ? "active" : "")"
+                           asp-controller="EmpresaPortal" asp-action="MeusEstagios">
+                            <i class="bi bi-briefcase"></i> Meus Estágios
+                        </a>
+                    </li>
+                }
+
+                <!-- Separador -->
+                <div class="nav-section">Conta</div>
+
+                @if (User.IsInRole("Administrador"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Utilizadores" ? "active" : "")"
+                           asp-controller="Utilizadores" asp-action="Index">
+                            <i class="bi bi-people"></i> Utilizadores
+                        </a>
+                    </li>
+                }
+
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Notificacoes" ? "active" : "")"
+                       asp-controller="Notificacoes" asp-action="Index">
+                        <i class="bi bi-bell"></i> Notificações
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index">
+                        <i class="bi bi-person-gear"></i> O Meu Perfil
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start"
+                                style="color: rgba(255,100,100,0.8);">
+                            <i class="bi bi-box-arrow-left"></i> Terminar Sessão
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- TOPBAR -->
+        <div id="topbar">
+            <button class="btn btn-sm btn-outline-secondary d-md-none"
+                    onclick="document.getElementById('sidebar').classList.toggle('show')">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+            <span class="page-title">@ViewData["Title"]</span>
+
+            <div class="d-flex align-items-center gap-3">
+                @await Component.InvokeAsync("NotificacaoBadge")
+                <span class="text-muted small d-none d-md-block">
+                    @DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("pt-PT"))
+                </span>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <main id="main-content">
+            @RenderBody()
+        </main>
+    }
+    else
+    {
+        <!-- Layout simples para páginas de login -->
+        <main>
+            @RenderBody()
+        </main>
+    }
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

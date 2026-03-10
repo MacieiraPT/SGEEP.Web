@@ -1,0 +1,138 @@
+﻿@using SGEEP.Core.Enums
+@{
+    ViewData["Title"] = "Dashboard — Aluno";
+    var estagio = ViewBag.Estagio as SGEEP.Core.Entities.Estagio;
+    var aluno = ViewBag.Aluno as SGEEP.Core.Entities.Aluno;
+    double horasValidadas = ViewBag.HorasValidadas ?? 0;
+    int horasPrevistas = estagio?.TotalHorasPrevistas ?? 210;
+    int percentagem = horasPrevistas > 0 ? (int)((horasValidadas / horasPrevistas) * 100) : 0;
+}
+
+<div class="container-fluid py-2">
+
+    @if (estagio == null)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-briefcase fs-1 text-muted d-block mb-3"></i>
+            <h5 class="text-muted">Ainda não tens nenhum estágio atribuído.</h5>
+            <p class="text-muted small">Contacta o teu Diretor de Curso.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card h-100" style="border-left: 4px solid #2563eb !important;">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div style="width:48px;height:48px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-briefcase fs-4 text-primary"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-0">Estado do Estágio</p>
+                            <h5 class="fw-bold mb-0">
+                                @switch (estagio.Estado)
+                                {
+                                    case EstadoEstagio.Ativo:
+                                        <span class="text-success">Ativo</span>
+                                        break;
+                                    case EstadoEstagio.Pendente:
+                                        <span class="text-warning">Pendente</span>
+                                        break;
+                                    case EstadoEstagio.Concluido:
+                                        <span class="text-primary">Concluído</span>
+                                        break;
+                                    default:
+                                        <span class="text-danger">Cancelado</span>
+                                        break;
+                                }
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="border-left: 4px solid #16a34a !important;">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div style="width:48px;height:48px;background:#f0fdf4;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-clock fs-4 text-success"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-0">Horas Validadas</p>
+                            <h3 class="fw-bold mb-0">@horasValidadas.ToString("F1") h</h3>
+                            <small class="text-muted">de @horasPrevistas h</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="border-left: 4px solid #d97706 !important;">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div style="width:48px;height:48px;background:#fffbeb;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-hourglass-split fs-4 text-warning"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-0">Horas por Validar</p>
+                            <h3 class="fw-bold mb-0">@(ViewBag.HorasPendentes ?? 0)</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="border-left: 4px solid #dc2626 !important;">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div style="width:48px;height:48px;background:#fef2f2;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-file-text fs-4 text-danger"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-0">Relatórios</p>
+                            <h3 class="fw-bold mb-0">@(ViewBag.RelatoriosSubmetidos ?? 0)</h3>
+                            <small class="text-muted">@(ViewBag.RelatoriosAprovados ?? 0) aprovados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progresso -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-semibold">Progresso de Horas</span>
+                    <span class="text-muted small">@percentagem%</span>
+                </div>
+                <div class="progress" style="height: 12px;">
+                    <div class="progress-bar @(percentagem >= 100 ? "bg-success" : "bg-primary")"
+                         style="width: @Math.Min(percentagem, 100)%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações rápidas -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-lightning"></i> Ações Rápidas</h6>
+            </div>
+            <div class="card-body d-flex gap-3 flex-wrap">
+                @if (estagio.Estado == EstadoEstagio.Ativo)
+                {
+                    <a asp-controller="RegistoHoras" asp-action="Create"
+                       asp-route-estagioId="@estagio.Id" class="btn btn-primary">
+                        <i class="bi bi-clock"></i> Registar Horas
+                    </a>
+                    <a asp-controller="Relatorios" asp-action="Create"
+                       asp-route-estagioId="@estagio.Id" class="btn btn-success">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Submeter Relatório
+                    </a>
+                }
+                <a asp-controller="RegistoHoras" asp-action="Index"
+                   asp-route-estagioId="@estagio.Id" class="btn btn-outline-primary">
+                    <i class="bi bi-clock-history"></i> Ver Horas
+                </a>
+                <a asp-controller="Relatorios" asp-action="Index"
+                   asp-route-estagioId="@estagio.Id" class="btn btn-outline-success">
+                    <i class="bi bi-file-text"></i> Ver Relatórios
+                </a>
+            </div>
+        </div>
+    }
+</div

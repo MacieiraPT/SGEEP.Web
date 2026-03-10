@@ -1,0 +1,85 @@
+@model SGEEP.Web.Models.ViewModels.AvaliacaoViewModel
+@{
+    ViewData["Title"] = "Concluir Estágio — Avaliação Final";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Avaliação Final do Estágio
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Estágio de <strong>@Model.AlunoNome</strong> na empresa
+                        <strong>@Model.EmpresaNome</strong>.
+                        Ao submeter esta avaliação, o estágio será marcado como <strong>Concluído</strong>.
+                    </div>
+
+                    <form asp-action="Concluir" asp-route-id="@Model.EstagioId" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="EstagioId" />
+
+                        <h6 class="mb-3"><i class="bi bi-star"></i> Notas (0 a 20)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="NotaAssiduidade" class="form-label"></label>
+                                <input asp-for="NotaAssiduidade" class="form-control"
+                                       type="number" step="0.1" min="0" max="20" />
+                                <span asp-validation-for="NotaAssiduidade" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="NotaDesempenho" class="form-label"></label>
+                                <input asp-for="NotaDesempenho" class="form-control"
+                                       type="number" step="0.1" min="0" max="20" />
+                                <span asp-validation-for="NotaDesempenho" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="NotaRelatorio" class="form-label"></label>
+                                <input asp-for="NotaRelatorio" class="form-control"
+                                       type="number" step="0.1" min="0" max="20" />
+                                <span asp-validation-for="NotaRelatorio" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="NotaFinal" class="form-label"></label>
+                                <input asp-for="NotaFinal" class="form-control"
+                                       type="number" step="0.1" min="0" max="20" />
+                                <span asp-validation-for="NotaFinal" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="mb-3">
+                            <label asp-for="Comentarios" class="form-label"></label>
+                            <textarea asp-for="Comentarios" class="form-control" rows="4"
+                                      placeholder="Comentários sobre o desempenho do aluno..."></textarea>
+                            <span asp-validation-for="Comentarios" class="text-danger small"></span>
+                        </div>
+
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Details" asp-route-id="@Model.EstagioId"
+                               class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check2-all"></i> Concluir Estágio e Registar Avaliação
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

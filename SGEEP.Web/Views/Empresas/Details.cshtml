@@ -1,0 +1,77 @@
+﻿@model SGEEP.Core.Entities.Empresa
+@{
+    ViewData["Title"] = "Detalhes da Empresa";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white d-flex justify-content-between">
+                    <h5 class="mb-0">
+                        <i class="bi bi-building"></i> @Model.Nome
+                    </h5>
+                    <span class="badge @(Model.Ativa ? "bg-success" : "bg-danger") fs-6">
+                        @(Model.Ativa ? "Ativa" : "Inativa")
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-info-circle"></i> Dados da Empresa
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">NIF</label>
+                            <p class="fw-bold">@Model.NIF</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Setor</label>
+                            <p class="fw-bold">@(Model.Setor ?? "—")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Morada</label>
+                            <p class="fw-bold">@(Model.Morada ?? "—")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Cidade</label>
+                            <p class="fw-bold">@(Model.Cidade ?? "—")</p>
+                        </div>
+                    </div>
+                    <hr />
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-person-badge"></i> Dados do Tutor
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Nome</label>
+                            <p class="fw-bold">@(Model.NomeTutor ?? "—")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Email</label>
+                            <p class="fw-bold">@(Model.EmailTutor ?? "—")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Telefone</label>
+                            <p class="fw-bold">@(Model.TelefoneTutor ?? "—")</p>
+                        </div>
+                    </div>
+                    @if (Model.Estagios.Any())
+                    {
+                        <hr />
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-briefcase"></i> Estágios (@Model.Estagios.Count)
+                        </h6>
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2 justify-content-end">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,69 @@
+﻿@model SGEEP.Web.Models.ViewModels.RegistoHorasViewModel
+@{
+    ViewData["Title"] = "Registar Horas";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock"></i> Registar Horas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="EstagioId" />
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Data" class="form-label"></label>
+                                <input asp-for="Data" class="form-control" type="date" />
+                                <span asp-validation-for="Data" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="HoraEntrada" class="form-label"></label>
+                                <input asp-for="HoraEntrada" class="form-control" type="time" />
+                                <span asp-validation-for="HoraEntrada" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="HoraSaida" class="form-label"></label>
+                                <input asp-for="HoraSaida" class="form-control" type="time" />
+                                <span asp-validation-for="HoraSaida" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="HoraPausa" class="form-label"></label>
+                                <input asp-for="HoraPausa" class="form-control" type="time" />
+                                <small class="text-muted">Duração total da pausa (ex: 01:00 = 1 hora)</small>
+                                <span asp-validation-for="HoraPausa" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Observacoes" class="form-label"></label>
+                                <textarea asp-for="Observacoes" class="form-control" rows="3"
+                                          placeholder="Tarefas realizadas, observações..."></textarea>
+                                <span asp-validation-for="Observacoes" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" asp-route-estagioId="@Model.EstagioId"
+                               class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Registar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

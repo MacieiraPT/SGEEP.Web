@@ -1,0 +1,161 @@
+﻿@model IEnumerable<SGEEP.Core.Entities.RegistoHoras>
+@using SGEEP.Core.Enums
+@{
+    ViewData["Title"] = "Registo de Horas";
+    var estagio = ViewBag.Estagio as SGEEP.Core.Entities.Estagio;
+    double horasValidadas = ViewBag.TotalHorasValidadas;
+    int horasPrevistas = ViewBag.TotalHorasPrevistas;
+    int percentagem = horasPrevistas > 0 ? (int)((horasValidadas / horasPrevistas) * 100) : 0;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-clock"></i> Registo de Horas</h2>
+            <p class="text-muted mb-0">
+                <strong>@estagio?.Aluno?.Nome</strong> —
+                @estagio?.Empresa?.Nome
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Estagios" asp-action="Details"
+               asp-route-id="@estagio?.Id" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar ao Estágio
+            </a>
+            @if (User.IsInRole("Aluno") && estagio?.Estado == SGEEP.Core.Enums.EstadoEstagio.Ativo)
+            {
+                <a asp-action="Create" asp-route-estagioId="@estagio?.Id"
+                   class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Registar Horas
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["Erro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Progresso -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+                <span><strong>@horasValidadas.ToString("F1") h</strong> validadas</span>
+                <span><strong>@horasPrevistas h</strong> previstas</span>
+            </div>
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar @(percentagem >= 100 ? "bg-success" : "bg-primary") fs-6"
+                     style="width: @Math.Min(percentagem, 100)%">
+                    @percentagem%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de registos -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Data</th>
+                            <th>Entrada</th>
+                            <th>Saída</th>
+                            <th>Pausa</th>
+                            <th>Total</th>
+                            <th>Observações</th>
+                            <th>Estado</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var registo in Model)
+                        {
+                            <tr>
+                                <td><strong>@registo.Data.ToString("dd/MM/yyyy")</strong></td>
+                                <td>@registo.HoraEntrada.ToString("HH:mm")</td>
+                                <td>@registo.HoraSaida.ToString("HH:mm")</td>
+                                <td>@(registo.HoraPausa?.ToString("HH:mm") ?? "—")</td>
+                                <td><strong>@registo.TotalHoras.ToString("F1") h</strong></td>
+                                <td>@(registo.Observacoes ?? "—")</td>
+                                <td>
+                                    @switch (registo.Estado)
+                                    {
+                                        case EstadoHoras.Pendente:
+                                            <span class="badge bg-warning text-dark">Pendente</span>
+                                            break;
+                                        case EstadoHoras.Validado:
+                                            <span class="badge bg-success">Validado</span>
+                                            break;
+                                        case EstadoHoras.Rejeitado:
+                                            <span class="badge bg-danger">Rejeitado</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (registo.Estado == EstadoHoras.Pendente)
+                                    {
+                                        @if (User.IsInRole("Administrador") || User.IsInRole("Professor"))
+                                        {
+                                            <form method="post" asp-action="Validar"
+                                                  asp-route-id="@registo.Id" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-success"
+                                                        title="Validar">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-action="Rejeitar"
+                                                  asp-route-id="@registo.Id" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        title="Rejeitar">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (User.IsInRole("Aluno"))
+                                        {
+                                            <form method="post" asp-action="Apagar"
+                                                  asp-route-id="@registo.Id" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        title="Apagar">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Nenhum registo de horas encontrado.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

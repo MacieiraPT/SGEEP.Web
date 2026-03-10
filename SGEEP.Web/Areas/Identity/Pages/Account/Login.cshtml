@@ -1,0 +1,57 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Iniciar Sessão";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; background: linear-gradient(135deg, #1a2a4a 0%, #1e3a5f 100%);">
+    <div class="card shadow-lg border-0" style="width: 420px; border-radius: 16px;">
+        <div class="card-body p-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold" style="color: #1a2a4a;">
+                    <span style="color: #2563eb;">S</span>GEEP
+                </h2>
+                <p class="text-muted small">Sistema de Gestão de Estágios</p>
+            </div>
+
+            <form id="account" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label fw-semibold small">Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Input.Email" class="form-control border-start-0" autocomplete="username" placeholder="utilizador@escola.pt" />
+                    </div>
+                    <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label fw-semibold small">Palavra-passe</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Input.Password" class="form-control border-start-0" autocomplete="current-password" placeholder="********" />
+                    </div>
+                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input asp-for="Input.RememberMe" class="form-check-input" />
+                    <label asp-for="Input.RememberMe" class="form-check-label small">Lembrar-me</label>
+                </div>
+
+                <button id="login-submit" type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="border-radius: 10px;">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
+                </button>
+            </form>
+        </div>
+
+        <div class="card-footer bg-light text-center py-3" style="border-radius: 0 0 16px 16px;">
+            <small class="text-muted">&copy; @DateTime.Now.Year SGEEP — Escola Profissional</small>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

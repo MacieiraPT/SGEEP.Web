@@ -1,0 +1,103 @@
+﻿@model SGEEP.Web.Models.ViewModels.EmpresaViewModel
+@{
+    ViewData["Title"] = "Nova Empresa";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-building-add"></i> Nova Empresa
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-info-circle"></i> Dados da Empresa
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label asp-for="Nome" class="form-label"></label>
+                                <input asp-for="Nome" class="form-control"
+                                       placeholder="Nome da empresa" />
+                                <span asp-validation-for="Nome" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="NIF" class="form-label"></label>
+                                <input asp-for="NIF" class="form-control"
+                                       placeholder="123456789" maxlength="9" />
+                                <span asp-validation-for="NIF" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="Morada" class="form-label"></label>
+                                <input asp-for="Morada" class="form-control"
+                                       placeholder="Rua, número, andar..." />
+                                <span asp-validation-for="Morada" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Cidade" class="form-label"></label>
+                                <input asp-for="Cidade" class="form-control"
+                                       placeholder="Ex: Lisboa" />
+                                <span asp-validation-for="Cidade" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-12">
+                                <label asp-for="Setor" class="form-label"></label>
+                                <input asp-for="Setor" class="form-control"
+                                       placeholder="Ex: Tecnologias de Informação" />
+                                <span asp-validation-for="Setor" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <hr />
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-person-badge"></i> Dados do Tutor
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="NomeTutor" class="form-label"></label>
+                                <input asp-for="NomeTutor" class="form-control"
+                                       placeholder="Nome completo do tutor" />
+                                <span asp-validation-for="NomeTutor" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="EmailTutor" class="form-label"></label>
+                                <input asp-for="EmailTutor" class="form-control"
+                                       placeholder="tutor@empresa.com" />
+                                <span asp-validation-for="EmailTutor" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="TelefoneTutor" class="form-label"></label>
+                                <input asp-for="TelefoneTutor" class="form-control"
+                                       placeholder="9XXXXXXXX" />
+                                <span asp-validation-for="TelefoneTutor" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="Ativa" class="form-check-input" />
+                                    <label asp-for="Ativa" class="form-check-label">Empresa Ativa</label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

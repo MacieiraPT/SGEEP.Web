@@ -1,0 +1,59 @@
+@model List<SGEEP.Core.Entities.Notificacao>
+@{
+    ViewData["Title"] = "Notificações";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-bell"></i> Notificações</h2>
+        @if (Model.Any(n => !n.Lida))
+        {
+            <form asp-action="MarcarTodasLidas" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-check-all"></i> Marcar todas como lidas
+                </button>
+            </form>
+        }
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="list-group">
+            @foreach (var n in Model)
+            {
+                <div class="list-group-item @(!n.Lida ? "list-group-item-light" : "")">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">
+                                @if (!n.Lida)
+                                {
+                                    <span class="badge bg-primary me-1" style="font-size: 0.6rem;">Nova</span>
+                                }
+                                @n.Titulo
+                            </h6>
+                            <p class="mb-1 text-muted small">@n.Mensagem</p>
+                            <small class="text-muted">@n.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                        @if (!n.Lida)
+                        {
+                            <form asp-action="MarcarLida" asp-route-id="@n.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar como lida">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-bell-slash" style="font-size: 3rem;"></i>
+            <p class="mt-3">Sem notificações.</p>
+        </div>
+    }
+</div>

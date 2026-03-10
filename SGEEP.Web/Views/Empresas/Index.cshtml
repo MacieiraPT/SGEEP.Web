@@ -1,0 +1,183 @@
+﻿@model SGEEP.Web.Models.PaginatedList<SGEEP.Core.Entities.Empresa>
+@{
+    ViewData["Title"] = "Empresas";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-building"></i> Empresas</h2>
+        <div class="d-flex gap-2">
+            <a asp-controller="Export" asp-action="EmpresasExcel" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </a>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-building-add"></i> Nova Empresa
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["Erro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <form method="get" class="d-flex gap-2">
+                <input type="text" name="pesquisa" value="@ViewBag.Pesquisa"
+                       class="form-control w-auto" placeholder="Pesquisar por nome, NIF ou cidade...">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+                @if (!string.IsNullOrEmpty(ViewBag.Pesquisa))
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                }
+            </form>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nome</th>
+                            <th>NIF</th>
+                            <th>Cidade</th>
+                            <th>Setor</th>
+                            <th>Tutor</th>
+                            <th>Estado</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var empresa in Model)
+                        {
+                            <tr>
+                                <td><strong>@empresa.Nome</strong></td>
+                                <td><span class="badge bg-secondary">@empresa.NIF</span></td>
+                                <td>@(empresa.Cidade ?? "—")</td>
+                                <td>@(empresa.Setor ?? "—")</td>
+                                <td>@(empresa.NomeTutor ?? "—")</td>
+                                <td>
+                                    @if (empresa.Ativa)
+                                    {
+                                        <span class="badge bg-success">Ativa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inativa</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@empresa.Id"
+                                       class="btn btn-sm btn-outline-info" title="Ver">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@empresa.Id"
+                                       class="btn btn-sm btn-outline-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            title="Desativar"
+                                            onclick="confirmarDelete(@empresa.Id, '@empresa.Nome')">
+                                        <i class="bi bi-building-x"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Nenhuma empresa encontrada.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="d-flex justify-content-center py-3">
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-pagina="@(Model.PageIndex - 1)"
+                               asp-route-pesquisa="@ViewBag.Pesquisa">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-pagina="@i"
+                                   asp-route-pesquisa="@ViewBag.Pesquisa">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-pagina="@(Model.PageIndex + 1)"
+                               asp-route-pesquisa="@ViewBag.Pesquisa">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDelete" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Desativação
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Tens a certeza que queres desativar a empresa <strong id="nomeEmpresa"></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <form id="formDelete" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-building-x"></i> Desativar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmarDelete(id, nome) {
+            document.getElementById('nomeEmpresa').textContent = nome;
+            document.getElementById('formDelete').action = '/Empresas/Delete/' + id;
+            new bootstrap.Modal(document.getElementById('modalDelete')).show();
+        }
+    </script>
+}
