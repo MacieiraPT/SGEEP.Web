@@ -17,14 +17,28 @@
                     <option value="">Todas as ações</option>
                     @foreach (var a in ViewBag.Acoes)
                     {
-                        <option value="@a" @(ViewBag.Acao == a ? "selected" : "")>@a</option>
+                        if ((string)ViewBag.Acao == a)
+                        {
+                            <option value="@a" selected>@a</option>
+                        }
+                        else
+                        {
+                            <option value="@a">@a</option>
+                        }
                     }
                 </select>
                 <select name="entidade" class="form-select w-auto">
                     <option value="">Todas as entidades</option>
                     @foreach (var e in ViewBag.Entidades)
                     {
-                        <option value="@e" @(ViewBag.Entidade == e ? "selected" : "")>@e</option>
+                        if ((string)ViewBag.Entidade == e)
+                        {
+                            <option value="@e" selected>@e</option>
+                        }
+                        else
+                        {
+                            <option value="@e">@e</option>
+                        }
                     }
                 </select>
                 <button type="submit" class="btn btn-primary">
