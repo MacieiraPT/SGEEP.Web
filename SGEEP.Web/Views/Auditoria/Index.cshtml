@@ -1,0 +1,134 @@
+@model SGEEP.Web.Models.PaginatedList<SGEEP.Core.Entities.RegistoAuditoria>
+@{
+    ViewData["Title"] = "Registos de Auditoria";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-shield-check"></i> Registos de Auditoria</h2>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <form method="get" class="d-flex gap-2 flex-wrap">
+                <input type="text" name="pesquisa" value="@ViewBag.Pesquisa"
+                       class="form-control w-auto" placeholder="Pesquisar por email ou detalhes...">
+                <select name="acao" class="form-select w-auto">
+                    <option value="">Todas as ações</option>
+                    @foreach (var a in ViewBag.Acoes)
+                    {
+                        <option value="@a" @(ViewBag.Acao == a ? "selected" : "")>@a</option>
+                    }
+                </select>
+                <select name="entidade" class="form-select w-auto">
+                    <option value="">Todas as entidades</option>
+                    @foreach (var e in ViewBag.Entidades)
+                    {
+                        <option value="@e" @(ViewBag.Entidade == e ? "selected" : "")>@e</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                @if (!string.IsNullOrEmpty(ViewBag.Pesquisa as string) ||
+                     !string.IsNullOrEmpty(ViewBag.Acao as string) ||
+                     !string.IsNullOrEmpty(ViewBag.Entidade as string))
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Limpar
+                    </a>
+                }
+            </form>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Ação</th>
+                            <th>Entidade</th>
+                            <th>ID</th>
+                            <th>Detalhes</th>
+                            <th>Utilizador</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    Nenhum registo encontrado.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td class="text-nowrap">
+                                    <small>@r.DataHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</small>
+                                </td>
+                                <td>
+                                    @{
+                                        var badgeClass = r.Acao switch
+                                        {
+                                            "Criar" => "bg-success",
+                                            "Desativar" => "bg-danger",
+                                            "Cancelar" => "bg-warning text-dark",
+                                            "Rejeitar" => "bg-danger",
+                                            "Aprovar" or "Validar" or "Concluir" => "bg-primary",
+                                            "ResetPassword" => "bg-secondary",
+                                            _ => "bg-secondary"
+                                        };
+                                    }
+                                    <span class="badge @badgeClass">@r.Acao</span>
+                                </td>
+                                <td>@r.Entidade</td>
+                                <td>@(r.EntidadeId?.ToString() ?? "-")</td>
+                                <td><small>@r.Detalhes</small></td>
+                                <td><small>@r.UtilizadorEmail</small></td>
+                                <td><small class="text-muted">@r.EnderecoIP</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="d-flex justify-content-center py-3">
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-pagina="@(Model.PageIndex - 1)"
+                               asp-route-pesquisa="@ViewBag.Pesquisa"
+                               asp-route-acao="@ViewBag.Acao"
+                               asp-route-entidade="@ViewBag.Entidade">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-pagina="@i"
+                                   asp-route-pesquisa="@ViewBag.Pesquisa"
+                                   asp-route-acao="@ViewBag.Acao"
+                                   asp-route-entidade="@ViewBag.Entidade">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-pagina="@(Model.PageIndex + 1)"
+                               asp-route-pesquisa="@ViewBag.Pesquisa"
+                               asp-route-acao="@ViewBag.Acao"
+                               asp-route-entidade="@ViewBag.Entidade">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
