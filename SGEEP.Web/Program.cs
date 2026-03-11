@@ -99,6 +99,8 @@ app.MapRazorPages();
 
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
     await SGEEP.Web.Data.SeedData.InicializarAsync(scope.ServiceProvider);
 }
 
