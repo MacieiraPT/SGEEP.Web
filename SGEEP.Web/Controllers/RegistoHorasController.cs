@@ -6,6 +6,7 @@ using SGEEP.Core.Entities;
 using SGEEP.Core.Enums;
 using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Models.ViewModels;
+using SGEEP.Web.Services;
 
 namespace SGEEP.Web.Controllers
 {
@@ -14,13 +15,16 @@ namespace SGEEP.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly AuditoriaService _auditoria;
 
         public RegistoHorasController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            AuditoriaService auditoria)
         {
             _context = context;
             _userManager = userManager;
+            _auditoria = auditoria;
         }
 
         // GET: RegistoHoras/Estagio/5
@@ -129,6 +133,8 @@ namespace SGEEP.Web.Controllers
             registo.DataValidacao = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
+            await _auditoria.RegistarAsync("Validar", "RegistoHoras", registo.Id, $"Registo de horas de {registo.Data:dd/MM/yyyy} validado (Estágio #{registo.EstagioId})");
+
             TempData["Sucesso"] = $"Registo de {registo.Data:dd/MM/yyyy} validado!";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
         }
@@ -149,6 +155,8 @@ namespace SGEEP.Web.Controllers
 
             registo.Estado = EstadoHoras.Rejeitado;
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Rejeitar", "RegistoHoras", registo.Id, $"Registo de horas de {registo.Data:dd/MM/yyyy} rejeitado (Estágio #{registo.EstagioId})");
 
             TempData["Erro"] = $"Registo de {registo.Data:dd/MM/yyyy} rejeitado.";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });

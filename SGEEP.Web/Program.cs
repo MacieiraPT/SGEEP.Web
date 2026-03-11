@@ -1,4 +1,6 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Middleware;
@@ -38,10 +40,27 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Serviços
 builder.Services.AddScoped<NotificacaoService>();
+builder.Services.AddScoped<AuditoriaService>();
+builder.Services.AddHttpContextAccessor();
 
 // MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+// Rate limiting for login endpoints
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("login", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -66,6 +85,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseRateLimiter();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();

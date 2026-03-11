@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using SGEEP.Web.Models;
 using SGEEP.Web.Models.ViewModels;
+using SGEEP.Web.Services;
 
 namespace SGEEP.Web.Controllers
 {
@@ -17,13 +18,16 @@ namespace SGEEP.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly AuditoriaService _auditoria;
 
         public ProfessoresController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            AuditoriaService auditoria)
         {
             _context = context;
             _userManager = userManager;
+            _auditoria = auditoria;
         }
 
         // GET: Professores
@@ -131,6 +135,8 @@ namespace SGEEP.Web.Controllers
             _context.Professores.Add(professor);
             await _context.SaveChangesAsync();
 
+            await _auditoria.RegistarAsync("Criar", "Professor", professor.Id, $"Professor '{professor.Nome}' criado com email {professor.Email}");
+
             TempData["Sucesso"] = $"Professor {professor.Nome} criado! Login: {vm.Email} | Password temporária: {passwordTemporaria}";
             return RedirectToAction(nameof(Index));
         }
@@ -229,6 +235,8 @@ namespace SGEEP.Web.Controllers
 
             professor.Ativo = false;
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Desativar", "Professor", professor.Id, $"Professor '{professor.Nome}' desativado");
 
             TempData["Sucesso"] = $"Professor {professor.Nome} desativado com sucesso!";
             return RedirectToAction(nameof(Index));

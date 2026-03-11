@@ -6,6 +6,7 @@ using SGEEP.Core.Entities;
 using SGEEP.Core.Enums;
 using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Models.ViewModels;
+using SGEEP.Web.Services;
 
 namespace SGEEP.Web.Controllers
 {
@@ -15,15 +16,18 @@ namespace SGEEP.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly AuditoriaService _auditoria;
 
         public RelatoriosController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            AuditoriaService auditoria)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
+            _auditoria = auditoria;
         }
 
         // GET: Relatorios/Index/5 (por estágio)
@@ -168,6 +172,9 @@ namespace SGEEP.Web.Controllers
                 : EstadoRelatorio.Rejeitado;
 
             await _context.SaveChangesAsync();
+
+            var acaoAudit = acao == "aprovar" ? "Aprovar" : "Rejeitar";
+            await _auditoria.RegistarAsync(acaoAudit, "Relatorio", relatorio.Id, $"Relatório '{relatorio.Titulo}' {acaoAudit.ToLower()}do (Estágio #{relatorio.EstagioId})");
 
             TempData["Sucesso"] = acao == "aprovar"
                 ? "Relatório aprovado com sucesso!"

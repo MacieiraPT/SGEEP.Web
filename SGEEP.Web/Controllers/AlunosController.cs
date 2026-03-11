@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using SGEEP.Web.Models;
 using SGEEP.Web.Models.ViewModels;
+using SGEEP.Web.Services;
 
 namespace SGEEP.Web.Controllers
 {
@@ -17,13 +18,16 @@ namespace SGEEP.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly AuditoriaService _auditoria;
 
         public AlunosController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            AuditoriaService auditoria)
         {
             _context = context;
             _userManager = userManager;
+            _auditoria = auditoria;
         }
 
         // GET: Alunos
@@ -161,6 +165,8 @@ namespace SGEEP.Web.Controllers
             _context.Alunos.Add(aluno);
             await _context.SaveChangesAsync();
 
+            await _auditoria.RegistarAsync("Criar", "Aluno", aluno.Id, $"Aluno '{aluno.Nome}' criado com email {aluno.Email}");
+
             TempData["Sucesso"] = $"Aluno {aluno.Nome} criado! Login: {vm.Email} | Password temporária: {passwordTemporaria}";
             return RedirectToAction(nameof(Index));
         }
@@ -263,6 +269,8 @@ namespace SGEEP.Web.Controllers
 
             aluno.Ativo = false;
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Desativar", "Aluno", aluno.Id, $"Aluno '{aluno.Nome}' desativado");
 
             TempData["Sucesso"] = $"Aluno {aluno.Nome} desativado com sucesso!";
             return RedirectToAction(nameof(Index));

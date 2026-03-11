@@ -16,11 +16,13 @@ namespace SGEEP.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly NotificacaoService _notificacaoService;
+        private readonly AuditoriaService _auditoria;
 
-        public EstagiosController(ApplicationDbContext context, NotificacaoService notificacaoService)
+        public EstagiosController(ApplicationDbContext context, NotificacaoService notificacaoService, AuditoriaService auditoria)
         {
             _context = context;
             _notificacaoService = notificacaoService;
+            _auditoria = auditoria;
         }
 
         // GET: Estagios
@@ -281,6 +283,8 @@ namespace SGEEP.Web.Controllers
             estagio.Estado = EstadoEstagio.Cancelado;
             await _context.SaveChangesAsync();
 
+            await _auditoria.RegistarAsync("Cancelar", "Estagio", estagio.Id, $"Estágio #{estagio.Id} cancelado");
+
             TempData["Sucesso"] = "Estágio cancelado.";
             return RedirectToAction(nameof(Index));
         }
@@ -357,6 +361,8 @@ namespace SGEEP.Web.Controllers
             if (!string.IsNullOrEmpty(estagio.Aluno?.ApplicationUserId))
                 await _notificacaoService.CriarAsync(estagio.Aluno.ApplicationUserId,
                     "Estágio Concluído", $"O seu estágio foi concluído com nota final de {vm.NotaFinal:F1}.");
+
+            await _auditoria.RegistarAsync("Concluir", "Estagio", estagio.Id, $"Estágio #{estagio.Id} concluído com nota final {vm.NotaFinal:F1}");
 
             TempData["Sucesso"] = "Estágio concluído e avaliação registada com sucesso!";
             return RedirectToAction(nameof(Details), new { id = estagio.Id });
