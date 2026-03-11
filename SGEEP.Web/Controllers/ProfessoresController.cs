@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SGEEP.Core.Entities;
 using SGEEP.Infrastructure.Data;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using SGEEP.Web.Models;
 using SGEEP.Web.Models.ViewModels;
 
@@ -95,7 +96,7 @@ namespace SGEEP.Web.Controllers
                 return View(vm);
             }
 
-            // Criar conta Identity (email + NIF como password)
+            // Criar conta Identity com password temporária aleatória
             var user = new IdentityUser
             {
                 UserName = vm.Email,
@@ -103,7 +104,8 @@ namespace SGEEP.Web.Controllers
                 EmailConfirmed = true
             };
 
-            var resultado = await _userManager.CreateAsync(user, vm.NIF + "@Sgeep1");
+            var passwordTemporaria = GerarPasswordTemporaria();
+            var resultado = await _userManager.CreateAsync(user, passwordTemporaria);
             if (!resultado.Succeeded)
             {
                 foreach (var erro in resultado.Errors)
@@ -129,7 +131,7 @@ namespace SGEEP.Web.Controllers
             _context.Professores.Add(professor);
             await _context.SaveChangesAsync();
 
-            TempData["Sucesso"] = $"Professor {professor.Nome} criado! Login: {vm.Email} | Password: {vm.NIF}@Sgeep1";
+            TempData["Sucesso"] = $"Professor {professor.Nome} criado! Login: {vm.Email} | Password temporária: {passwordTemporaria}";
             return RedirectToAction(nameof(Index));
         }
 
@@ -230,6 +232,30 @@ namespace SGEEP.Web.Controllers
 
             TempData["Sucesso"] = $"Professor {professor.Nome} desativado com sucesso!";
             return RedirectToAction(nameof(Index));
+        }
+
+        private static string GerarPasswordTemporaria()
+        {
+            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const string lower = "abcdefghijkmnpqrstuvwxyz";
+            const string digits = "23456789";
+            const string special = "!@#$%";
+            const string all = upper + lower + digits + special;
+
+            var bytes = RandomNumberGenerator.GetBytes(12);
+            var chars = new char[12];
+            chars[0] = upper[bytes[0] % upper.Length];
+            chars[1] = digits[bytes[1] % digits.Length];
+            chars[2] = special[bytes[2] % special.Length];
+            for (int i = 3; i < 12; i++)
+                chars[i] = all[bytes[i] % all.Length];
+
+            for (int i = chars.Length - 1; i > 0; i--)
+            {
+                var j = bytes[i % bytes.Length] % (i + 1);
+                (chars[i], chars[j]) = (chars[j], chars[i]);
+            }
+            return new string(chars);
         }
 
         private async Task<IEnumerable<SelectListItem>> GetCursosSelectList()

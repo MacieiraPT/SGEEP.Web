@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -76,7 +77,7 @@ namespace SGEEP.Web.Controllers
                 return View(vm);
             }
 
-            // Criar conta Identity para o Tutor
+            // Criar conta Identity para o Tutor com password temporária aleatória
             var user = new IdentityUser
             {
                 UserName = vm.EmailTutor,
@@ -84,7 +85,8 @@ namespace SGEEP.Web.Controllers
                 EmailConfirmed = true
             };
 
-            var resultado = await _userManager.CreateAsync(user, vm.NIF + "@Sgeep1");
+            var passwordTemporaria = GerarPasswordTemporaria();
+            var resultado = await _userManager.CreateAsync(user, passwordTemporaria);
             if (!resultado.Succeeded)
             {
                 foreach (var erro in resultado.Errors)
@@ -112,7 +114,7 @@ namespace SGEEP.Web.Controllers
             _context.Empresas.Add(empresa);
             await _context.SaveChangesAsync();
 
-            TempData["Sucesso"] = $"Empresa {empresa.Nome} criada! Login Tutor: {vm.EmailTutor} | Password: {vm.NIF}@Sgeep1";
+            TempData["Sucesso"] = $"Empresa {empresa.Nome} criada! Login Tutor: {vm.EmailTutor} | Password temporária: {passwordTemporaria}";
             return RedirectToAction(nameof(Index));
         }
 
@@ -207,6 +209,30 @@ namespace SGEEP.Web.Controllers
 
             TempData["Sucesso"] = $"Empresa {empresa.Nome} desativada com sucesso!";
             return RedirectToAction(nameof(Index));
+        }
+
+        private static string GerarPasswordTemporaria()
+        {
+            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const string lower = "abcdefghijkmnpqrstuvwxyz";
+            const string digits = "23456789";
+            const string special = "!@#$%";
+            const string all = upper + lower + digits + special;
+
+            var bytes = RandomNumberGenerator.GetBytes(12);
+            var chars = new char[12];
+            chars[0] = upper[bytes[0] % upper.Length];
+            chars[1] = digits[bytes[1] % digits.Length];
+            chars[2] = special[bytes[2] % special.Length];
+            for (int i = 3; i < 12; i++)
+                chars[i] = all[bytes[i] % all.Length];
+
+            for (int i = chars.Length - 1; i > 0; i--)
+            {
+                var j = bytes[i % bytes.Length] % (i + 1);
+                (chars[i], chars[j]) = (chars[j], chars[i]);
+            }
+            return new string(chars);
         }
     }
 }

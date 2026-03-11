@@ -134,6 +134,8 @@ namespace SGEEP.Web.Controllers
 
             if (relatorio == null) return NotFound();
 
+            if (!await TemAcesso(relatorio.Estagio)) return Forbid();
+
             return View(new RelatorioViewModel
             {
                 Id = relatorio.Id,
@@ -152,8 +154,12 @@ namespace SGEEP.Web.Controllers
         [Authorize(Roles = "Administrador,Professor")]
         public async Task<IActionResult> Avaliar(RelatorioViewModel vm, string acao)
         {
-            var relatorio = await _context.Relatorios.FindAsync(vm.Id);
+            var relatorio = await _context.Relatorios
+                .Include(r => r.Estagio)
+                .FirstOrDefaultAsync(r => r.Id == vm.Id);
             if (relatorio == null) return NotFound();
+
+            if (!await TemAcesso(relatorio.Estagio)) return Forbid();
 
             relatorio.ComentarioProfessor = vm.ComentarioProfessor;
             relatorio.DataAvaliacao = DateTime.UtcNow;
@@ -173,13 +179,22 @@ namespace SGEEP.Web.Controllers
         // GET: Relatorios/Download/5
         public async Task<IActionResult> Download(int id)
         {
-            var relatorio = await _context.Relatorios.FindAsync(id);
+            var relatorio = await _context.Relatorios
+                .Include(r => r.Estagio)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
             if (relatorio == null || relatorio.FicheiroPath == null)
                 return NotFound();
 
-            var caminhoFisico = Path.Combine(
-                _environment.WebRootPath,
-                relatorio.FicheiroPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            if (!await TemAcesso(relatorio.Estagio)) return Forbid();
+
+            // Resolve the physical path and ensure it stays within the uploads directory
+            var uploadsRoot = Path.GetFullPath(Path.Combine(_environment.WebRootPath, "uploads", "relatorios"));
+            var normalised = relatorio.FicheiroPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var caminhoFisico = Path.GetFullPath(Path.Combine(_environment.WebRootPath, normalised));
+
+            if (!caminhoFisico.StartsWith(uploadsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                return BadRequest();
 
             if (!System.IO.File.Exists(caminhoFisico))
                 return NotFound();

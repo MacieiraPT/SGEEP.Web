@@ -123,6 +123,8 @@ namespace SGEEP.Web.Controllers
 
             if (registo == null) return NotFound();
 
+            if (!await TemAcesso(registo.Estagio)) return Forbid();
+
             registo.Estado = EstadoHoras.Validado;
             registo.DataValidacao = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -143,6 +145,8 @@ namespace SGEEP.Web.Controllers
 
             if (registo == null) return NotFound();
 
+            if (!await TemAcesso(registo.Estagio)) return Forbid();
+
             registo.Estado = EstadoHoras.Rejeitado;
             await _context.SaveChangesAsync();
 
@@ -156,8 +160,13 @@ namespace SGEEP.Web.Controllers
         [Authorize(Roles = "Aluno")]
         public async Task<IActionResult> Apagar(int id)
         {
-            var registo = await _context.RegistoHoras.FindAsync(id);
+            var registo = await _context.RegistoHoras
+                .Include(r => r.Estagio)
+                .FirstOrDefaultAsync(r => r.Id == id);
             if (registo == null) return NotFound();
+
+            // Verificar que o aluno autenticado é o dono do registo
+            if (!await TemAcesso(registo.Estagio)) return Forbid();
 
             // Só pode apagar registos pendentes
             if (registo.Estado != EstadoHoras.Pendente)
