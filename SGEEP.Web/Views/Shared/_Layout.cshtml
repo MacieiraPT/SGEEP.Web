@@ -352,6 +352,12 @@
                             <i class="bi bi-person-workspace"></i> Professores
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Auditoria" ? "active" : "")"
+                           asp-controller="Auditoria" asp-action="Index">
+                            <i class="bi bi-shield-check"></i> Auditoria
+                        </a>
+                    </li>
                 }
 
                 @if (User.IsInRole("Aluno"))
