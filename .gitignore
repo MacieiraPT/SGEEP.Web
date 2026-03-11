@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ASP.NET Core sensitive config — use environment variables or User Secrets instead
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.json.example

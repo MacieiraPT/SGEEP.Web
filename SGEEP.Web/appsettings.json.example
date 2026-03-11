@@ -1,0 +1,14 @@
+{
+  "ConnectionStrings": {
+    // Set via environment variable: ConnectionStrings__DefaultConnection
+    // e.g. export ConnectionStrings__DefaultConnection="User Id=...;Password=...;Server=...;Port=5432;Database=postgres"
+    "DefaultConnection": ""
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}

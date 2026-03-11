@@ -6,6 +6,7 @@ using SGEEP.Core.Entities;
 using SGEEP.Core.Enums;
 using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Models.ViewModels;
+using SGEEP.Web.Services;
 
 namespace SGEEP.Web.Controllers
 {
@@ -14,13 +15,16 @@ namespace SGEEP.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly AuditoriaService _auditoria;
 
         public RegistoHorasController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            AuditoriaService auditoria)
         {
             _context = context;
             _userManager = userManager;
+            _auditoria = auditoria;
         }
 
         // GET: RegistoHoras/Estagio/5
@@ -123,9 +127,13 @@ namespace SGEEP.Web.Controllers
 
             if (registo == null) return NotFound();
 
+            if (!await TemAcesso(registo.Estagio)) return Forbid();
+
             registo.Estado = EstadoHoras.Validado;
             registo.DataValidacao = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Validar", "RegistoHoras", registo.Id, $"Registo de horas de {registo.Data:dd/MM/yyyy} validado (Estágio #{registo.EstagioId})");
 
             TempData["Sucesso"] = $"Registo de {registo.Data:dd/MM/yyyy} validado!";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
@@ -143,8 +151,12 @@ namespace SGEEP.Web.Controllers
 
             if (registo == null) return NotFound();
 
+            if (!await TemAcesso(registo.Estagio)) return Forbid();
+
             registo.Estado = EstadoHoras.Rejeitado;
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Rejeitar", "RegistoHoras", registo.Id, $"Registo de horas de {registo.Data:dd/MM/yyyy} rejeitado (Estágio #{registo.EstagioId})");
 
             TempData["Erro"] = $"Registo de {registo.Data:dd/MM/yyyy} rejeitado.";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
@@ -156,8 +168,13 @@ namespace SGEEP.Web.Controllers
         [Authorize(Roles = "Aluno")]
         public async Task<IActionResult> Apagar(int id)
         {
-            var registo = await _context.RegistoHoras.FindAsync(id);
+            var registo = await _context.RegistoHoras
+                .Include(r => r.Estagio)
+                .FirstOrDefaultAsync(r => r.Id == id);
             if (registo == null) return NotFound();
+
+            // Verificar que o aluno autenticado é o dono do registo
+            if (!await TemAcesso(registo.Estagio)) return Forbid();
 
             // Só pode apagar registos pendentes
             if (registo.Estado != EstadoHoras.Pendente)

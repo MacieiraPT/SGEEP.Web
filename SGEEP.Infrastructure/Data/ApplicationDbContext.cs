@@ -20,6 +20,7 @@ namespace SGEEP.Infrastructure.Data
         public DbSet<Relatorio> Relatorios { get; set; }
         public DbSet<Avaliacao> Avaliacoes { get; set; }
         public DbSet<Notificacao> Notificacoes { get; set; }
+        public DbSet<RegistoAuditoria> RegistosAuditoria { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
