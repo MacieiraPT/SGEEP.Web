@@ -1,6 +1,6 @@
-# SGEEP — Sistema de Gestão de Estágios e Empregabilidade Profissional
+# SGEEP — Sistema de Gestão de Estágios para Escolas Profissionais
 
-Aplicação web para gestão de estágios curriculares e empregabilidade profissional, desenvolvida em ASP.NET Core 8 MVC com arquitetura em camadas.
+Aplicação web para gestão de estágios em escolas profissionais, desenvolvida em ASP.NET Core 8 MVC com arquitetura em camadas.
 
 ## Funcionalidades
 
