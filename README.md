@@ -42,40 +42,32 @@ SGEEP.Tests/          # Testes unitários — xUnit + Moq com InMemory DB
 - **ClosedXML** — exportação para Excel
 - **MailKit** — envio de e-mail
 
-## Pré-requisitos
+## Configuração Local
+
+### Pré-requisitos
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [PostgreSQL](https://www.postgresql.org/)
 
-## Configuração
+### Passos
 
-1. Clone o repositório:
-   ```bash
-   git clone <url-do-repositório>
-   cd SGEEP.Web
-   ```
-
-2. Configure a string de ligação à base de dados via variável de ambiente:
+1. Configure a string de ligação à base de dados via variável de ambiente:
    ```bash
    export ConnectionStrings__DefaultConnection="User Id=<user>;Password=<password>;Server=<host>;Port=5432;Database=sgeep"
    ```
-   Ou use o ficheiro `SGEEP.Web/appsettings.json` (não rastreado pelo git) com base no exemplo disponível em `SGEEP.Web/appsettings.json.example`.
+   Em alternativa, crie o ficheiro `SGEEP.Web/appsettings.json` com base no exemplo `SGEEP.Web/appsettings.json.example`.
 
-3. Aplique as migrações:
+2. Aplique as migrações:
    ```bash
    dotnet ef database update --project SGEEP.Infrastructure --startup-project SGEEP.Web
    ```
 
-4. Execute a aplicação:
+3. Execute a aplicação:
    ```bash
    dotnet run --project SGEEP.Web
    ```
 
-A aplicação estará disponível em:
-- HTTP: `http://localhost:5267`
-- HTTPS: `https://localhost:7110`
-
-Na primeira execução, o sistema cria automaticamente os papéis e um utilizador administrador de base (ver `SGEEP.Web/Data/SeedData.cs`).
+Na primeira execução, o sistema cria automaticamente os papéis e um utilizador administrador de base.
 
 ## Desenvolvimento
 
@@ -91,14 +83,6 @@ dotnet test
 dotnet ef migrations add <NomeDaMigracao> --project SGEEP.Infrastructure --startup-project SGEEP.Web
 ```
 
-## Testes
-
-Os testes unitários cobrem validação de entidades, lógica de negócio, paginação e serviços CRUD. Utilizam uma base de dados InMemory para isolamento.
-
-```bash
-dotnet test
-```
-
 ## Segurança
 
 - Cabeçalhos de segurança HTTP configurados via middleware
@@ -107,10 +91,3 @@ dotnet test
 - Bloqueio de conta após 5 tentativas falhadas (15 minutos)
 - Middleware de alteração forçada de palavra-passe no primeiro login
 - Tokens anti-CSRF em todos os formulários POST
-
-## Notas para Contribuição
-
-- Todo o código, comentários e mensagens de interface devem ser escritos em **português**
-- Siga as convenções de nomenclatura existentes (PascalCase para classes/métodos, camelCase para variáveis)
-- O ficheiro `appsettings.json` está no `.gitignore` — nunca inclua credenciais no repositório
-- Corra os testes localmente antes de fazer push (`dotnet test`)
