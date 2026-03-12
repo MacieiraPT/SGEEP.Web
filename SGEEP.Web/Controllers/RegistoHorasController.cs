@@ -82,10 +82,54 @@ namespace SGEEP.Web.Controllers
         {
             if (!ModelState.IsValid) return View(vm);
 
+            // Carregar estágio para validações
+            var estagio = await _context.Estagios.FindAsync(vm.EstagioId);
+            if (estagio == null) return NotFound();
+
+            // Verificar que o estágio está ativo
+            if (estagio.Estado != EstadoEstagio.Ativo)
+            {
+                TempData["Erro"] = "Só é possível registar horas em estágios ativos.";
+                return RedirectToAction(nameof(Index), new { estagioId = vm.EstagioId });
+            }
+
+            // Validar que a data está dentro do período do estágio
+            var dataInicio = DateOnly.FromDateTime(estagio.DataInicio);
+            var dataFim = DateOnly.FromDateTime(estagio.DataFim);
+            if (vm.Data < dataInicio || vm.Data > dataFim)
+            {
+                ModelState.AddModelError("Data", $"A data deve estar dentro do período do estágio ({dataInicio:dd/MM/yyyy} a {dataFim:dd/MM/yyyy}).");
+                return View(vm);
+            }
+
+            // Validar que a data não é no futuro
+            if (vm.Data > DateOnly.FromDateTime(DateTime.Today))
+            {
+                ModelState.AddModelError("Data", "Não é possível registar horas para uma data futura.");
+                return View(vm);
+            }
+
             // Validar horas
             if (vm.HoraSaida <= vm.HoraEntrada)
             {
                 ModelState.AddModelError("HoraSaida", "A hora de saída deve ser posterior à hora de entrada.");
+                return View(vm);
+            }
+
+            // Validar que a pausa não excede o tempo trabalhado
+            var tempoTrabalhado = vm.HoraSaida.ToTimeSpan() - vm.HoraEntrada.ToTimeSpan();
+            var tempoPausa = vm.HoraPausa?.ToTimeSpan() ?? TimeSpan.Zero;
+            if (tempoPausa >= tempoTrabalhado)
+            {
+                ModelState.AddModelError("HoraPausa", "A duração da pausa não pode ser igual ou superior ao tempo entre entrada e saída.");
+                return View(vm);
+            }
+
+            // Validar limite máximo de horas diárias (16h)
+            var horasEfetivas = (tempoTrabalhado - tempoPausa).TotalHours;
+            if (horasEfetivas > 16)
+            {
+                ModelState.AddModelError("HoraSaida", "O registo não pode exceder 16 horas diárias.");
                 return View(vm);
             }
 
@@ -131,6 +175,20 @@ namespace SGEEP.Web.Controllers
 
             if (!await TemAcesso(registo.Estagio)) return Forbid();
 
+            // Verificar que o estágio está ativo
+            if (registo.Estagio.Estado != EstadoEstagio.Ativo)
+            {
+                TempData["Erro"] = "Só é possível validar horas de estágios ativos.";
+                return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
+            }
+
+            // Verificar que o registo está pendente
+            if (registo.Estado != EstadoHoras.Pendente)
+            {
+                TempData["Erro"] = "Este registo já foi processado.";
+                return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
+            }
+
             registo.Estado = EstadoHoras.Validado;
             registo.DataValidacao = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -154,6 +212,20 @@ namespace SGEEP.Web.Controllers
             if (registo == null) return NotFound();
 
             if (!await TemAcesso(registo.Estagio)) return Forbid();
+
+            // Verificar que o estágio está ativo
+            if (registo.Estagio.Estado != EstadoEstagio.Ativo)
+            {
+                TempData["Erro"] = "Só é possível rejeitar horas de estágios ativos.";
+                return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
+            }
+
+            // Verificar que o registo está pendente
+            if (registo.Estado != EstadoHoras.Pendente)
+            {
+                TempData["Erro"] = "Este registo já foi processado.";
+                return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
+            }
 
             registo.Estado = EstadoHoras.Rejeitado;
             await _context.SaveChangesAsync();

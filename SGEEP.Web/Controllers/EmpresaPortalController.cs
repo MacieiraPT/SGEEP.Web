@@ -83,6 +83,20 @@ namespace SGEEP.Web.Controllers
 
             if (registo == null) return NotFound();
 
+            // Verificar que o estágio está ativo
+            if (registo.Estagio.Estado != EstadoEstagio.Ativo)
+            {
+                TempData["Erro"] = "Só é possível validar horas de estágios ativos.";
+                return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
+            }
+
+            // Verificar que o registo está pendente
+            if (registo.Estado != EstadoHoras.Pendente)
+            {
+                TempData["Erro"] = "Este registo já foi processado.";
+                return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
+            }
+
             registo.Estado = EstadoHoras.Validado;
             registo.DataValidacao = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -111,6 +125,20 @@ namespace SGEEP.Web.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id && r.Estagio.EmpresaId == empresaId);
 
             if (registo == null) return NotFound();
+
+            // Verificar que o estágio está ativo
+            if (registo.Estagio.Estado != EstadoEstagio.Ativo)
+            {
+                TempData["Erro"] = "Só é possível rejeitar horas de estágios ativos.";
+                return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
+            }
+
+            // Verificar que o registo está pendente
+            if (registo.Estado != EstadoHoras.Pendente)
+            {
+                TempData["Erro"] = "Este registo já foi processado.";
+                return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
+            }
 
             registo.Estado = EstadoHoras.Rejeitado;
             registo.DataValidacao = DateTime.UtcNow;
