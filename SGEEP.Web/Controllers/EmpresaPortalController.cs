@@ -32,7 +32,7 @@ namespace SGEEP.Web.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var empresa = await _context.Empresas
-                .FirstOrDefaultAsync(e => e.ApplicationUserId == user!.Id);
+                .FirstOrDefaultAsync(e => e.ApplicationUserId == user!.Id && e.Ativa);
             return empresa?.Id;
         }
 

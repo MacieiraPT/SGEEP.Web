@@ -242,7 +242,9 @@ namespace SGEEP.Web.Controllers
             }
 
             estagio.EmpresaId = vm.EmpresaId;
-            estagio.ProfessorId = vm.ProfessorId;
+            // Apenas administradores podem reatribuir o professor orientador
+            if (User.IsInRole("Administrador"))
+                estagio.ProfessorId = vm.ProfessorId;
             estagio.DataInicio = vm.DataInicio;
             estagio.DataFim = vm.DataFim;
             estagio.LocalEstagio = vm.LocalEstagio;
@@ -266,6 +268,9 @@ namespace SGEEP.Web.Controllers
                 .Include(e => e.Empresa)
                 .FirstOrDefaultAsync(e => e.Id == id);
             if (estagio == null) return NotFound();
+
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
 
             if (estagio.Estado != EstadoEstagio.Pendente)
             {
@@ -300,6 +305,9 @@ namespace SGEEP.Web.Controllers
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (estagio == null) return NotFound();
+
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
 
             if (estagio.Estado == EstadoEstagio.Concluido)
             {

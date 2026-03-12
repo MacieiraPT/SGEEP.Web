@@ -78,6 +78,17 @@ namespace SGEEP.Web.Controllers
         {
             if (!ModelState.IsValid) return View(vm);
 
+            // Verificar propriedade e estado do estágio
+            var estagio = await _context.Estagios.FindAsync(vm.EstagioId);
+            if (estagio == null) return NotFound();
+            if (!await TemAcesso(estagio)) return Forbid();
+
+            if (estagio.Estado != EstadoEstagio.Ativo)
+            {
+                TempData["Erro"] = "Só é possível submeter relatórios em estágios ativos.";
+                return RedirectToAction(nameof(Index), new { estagioId = vm.EstagioId });
+            }
+
             string? ficheiroPath = null;
 
             if (vm.Ficheiro != null && vm.Ficheiro.Length > 0)

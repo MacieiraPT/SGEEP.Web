@@ -86,6 +86,9 @@ namespace SGEEP.Web.Controllers
             var estagio = await _context.Estagios.FindAsync(vm.EstagioId);
             if (estagio == null) return NotFound();
 
+            // Verificar que o aluno autenticado é o dono do estágio
+            if (!await TemAcesso(estagio)) return Forbid();
+
             // Verificar que o estágio está ativo
             if (estagio.Estado != EstadoEstagio.Ativo)
             {
