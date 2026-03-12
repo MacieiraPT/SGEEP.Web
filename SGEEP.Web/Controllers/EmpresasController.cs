@@ -8,6 +8,7 @@ using SGEEP.Core.Entities;
 using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Models;
 using SGEEP.Web.Models.ViewModels;
+using SGEEP.Web.Services;
 
 namespace SGEEP.Web.Controllers
 {
@@ -16,13 +17,16 @@ namespace SGEEP.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly AuditoriaService _auditoria;
 
         public EmpresasController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            AuditoriaService auditoria)
         {
             _context = context;
             _userManager = userManager;
+            _auditoria = auditoria;
         }
 
         // GET: Empresas
@@ -53,6 +57,7 @@ namespace SGEEP.Web.Controllers
         }
 
         // GET: Empresas/Create
+        [Authorize(Roles = "Administrador")]
         public IActionResult Create()
         {
             return View(new EmpresaViewModel());
@@ -61,6 +66,7 @@ namespace SGEEP.Web.Controllers
         // POST: Empresas/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Create(EmpresaViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);
@@ -114,11 +120,14 @@ namespace SGEEP.Web.Controllers
             _context.Empresas.Add(empresa);
             await _context.SaveChangesAsync();
 
+            await _auditoria.RegistarAsync("Criar", "Empresa", empresa.Id, $"Empresa '{empresa.Nome}' criada");
+
             TempData["Sucesso"] = $"Empresa {empresa.Nome} criada! Login Tutor: {vm.EmailTutor} | Password temporária: {passwordTemporaria}";
             return RedirectToAction(nameof(Index));
         }
 
         // GET: Empresas/Edit/5
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(int id)
         {
             var empresa = await _context.Empresas.FindAsync(id);
@@ -142,6 +151,7 @@ namespace SGEEP.Web.Controllers
         // POST: Empresas/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(int id, EmpresaViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);
@@ -166,6 +176,8 @@ namespace SGEEP.Web.Controllers
             empresa.Ativa = vm.Ativa;
 
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Editar", "Empresa", empresa.Id, $"Empresa '{empresa.Nome}' editada");
 
             TempData["Sucesso"] = $"Empresa {empresa.Nome} atualizada com sucesso!";
             return RedirectToAction(nameof(Index));
@@ -206,6 +218,8 @@ namespace SGEEP.Web.Controllers
 
             empresa.Ativa = false;
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Desativar", "Empresa", empresa.Id, $"Empresa '{empresa.Nome}' desativada");
 
             TempData["Sucesso"] = $"Empresa {empresa.Nome} desativada com sucesso!";
             return RedirectToAction(nameof(Index));

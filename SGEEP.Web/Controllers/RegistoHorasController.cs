@@ -111,6 +111,8 @@ namespace SGEEP.Web.Controllers
             _context.RegistoHoras.Add(registo);
             await _context.SaveChangesAsync();
 
+            await _auditoria.RegistarAsync("Criar", "RegistoHoras", registo.Id, $"Registo de horas criado para {registo.Data:dd/MM/yyyy} (Estágio #{registo.EstagioId})");
+
             TempData["Sucesso"] = $"Registo de {vm.Data:dd/MM/yyyy} submetido com sucesso!";
             return RedirectToAction(nameof(Index), new { estagioId = vm.EstagioId });
         }

@@ -14,15 +14,18 @@ namespace SGEEP.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly NotificacaoService _notificacaoService;
+        private readonly AuditoriaService _auditoria;
 
         public EmpresaPortalController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
-            NotificacaoService notificacaoService)
+            NotificacaoService notificacaoService,
+            AuditoriaService auditoria)
         {
             _context = context;
             _userManager = userManager;
             _notificacaoService = notificacaoService;
+            _auditoria = auditoria;
         }
 
         private async Task<int?> GetEmpresaIdAsync()
@@ -84,6 +87,8 @@ namespace SGEEP.Web.Controllers
             registo.DataValidacao = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
+            await _auditoria.RegistarAsync("ValidarHoras", "RegistoHoras", registo.Id, $"Empresa validou horas de {registo.Data:dd/MM/yyyy} (Estágio #{registo.EstagioId})");
+
             // Notificar aluno
             if (!string.IsNullOrEmpty(registo.Estagio.Aluno?.ApplicationUserId))
                 await _notificacaoService.CriarAsync(registo.Estagio.Aluno.ApplicationUserId,
@@ -110,6 +115,8 @@ namespace SGEEP.Web.Controllers
             registo.Estado = EstadoHoras.Rejeitado;
             registo.DataValidacao = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("RejeitarHoras", "RegistoHoras", registo.Id, $"Empresa rejeitou horas de {registo.Data:dd/MM/yyyy} (Estágio #{registo.EstagioId})");
 
             // Notificar aluno
             if (!string.IsNullOrEmpty(registo.Estagio.Aluno?.ApplicationUserId))

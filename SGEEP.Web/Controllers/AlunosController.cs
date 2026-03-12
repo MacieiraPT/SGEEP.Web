@@ -80,6 +80,18 @@ namespace SGEEP.Web.Controllers
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (aluno == null) return NotFound();
+
+            // Professor só pode ver alunos do seu curso
+            if (User.IsInRole("Professor"))
+            {
+                var userEmail = User.Identity!.Name;
+                var professor = await _context.Professores
+                    .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo);
+
+                if (professor == null || aluno.CursoId != professor.CursoId)
+                    return Forbid();
+            }
+
             return View(aluno);
         }
 

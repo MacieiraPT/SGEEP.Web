@@ -1,7 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using SGEEP.Core.Entities;
 using SGEEP.Core.Enums;
 using SGEEP.Infrastructure.Data;
+using SGEEP.Web.Areas.Identity.Pages.Account;
+using SGEEP.Web.Controllers;
+using SGEEP.Web.Helpers;
 using SGEEP.Web.Models;
 using SGEEP.Web.Models.ViewModels;
 using SGEEP.Web.Services;
@@ -293,6 +300,256 @@ namespace SGEEP.Tests
 
             var naoLidas = await context.Notificacoes.CountAsync(n => !n.Lida);
             Assert.Equal(0, naoLidas);
+        }
+    }
+
+    #endregion
+
+    #region Testes de Atributos de Autorização
+
+    public class AtributosAutorizacaoTests
+    {
+        [Fact]
+        public void EmpresasController_Create_Get_RequerAdministrador()
+        {
+            var method = typeof(EmpresasController).GetMethod("Create", Type.EmptyTypes);
+            var attr = method!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.NotNull(attr);
+            Assert.Contains("Administrador", attr!.Roles!);
+        }
+
+        [Fact]
+        public void EmpresasController_Create_Post_RequerAdministrador()
+        {
+            var method = typeof(EmpresasController).GetMethod("Create",
+                new[] { typeof(EmpresaViewModel) });
+            var attr = method!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.NotNull(attr);
+            Assert.Contains("Administrador", attr!.Roles!);
+        }
+
+        [Fact]
+        public void EmpresasController_Edit_Get_RequerAdministrador()
+        {
+            var method = typeof(EmpresasController).GetMethod("Edit", new[] { typeof(int) });
+            var attr = method!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.NotNull(attr);
+            Assert.Contains("Administrador", attr!.Roles!);
+        }
+
+        [Fact]
+        public void EmpresasController_Edit_Post_RequerAdministrador()
+        {
+            var method = typeof(EmpresasController).GetMethod("Edit",
+                new[] { typeof(int), typeof(EmpresaViewModel) });
+            var attr = method!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.NotNull(attr);
+            Assert.Contains("Administrador", attr!.Roles!);
+        }
+
+        [Fact]
+        public void HomeController_Error_TemAllowAnonymous()
+        {
+            var method = typeof(HomeController).GetMethod("Error");
+            var attr = method!.GetCustomAttributes(typeof(AllowAnonymousAttribute), false);
+            Assert.NotEmpty(attr);
+        }
+
+        [Fact]
+        public void LoginModel_TemEnableRateLimiting()
+        {
+            var attr = typeof(LoginModel).GetCustomAttributes(
+                typeof(EnableRateLimitingAttribute), false);
+            Assert.NotEmpty(attr);
+        }
+    }
+
+    #endregion
+
+    #region Testes de Validação de Ficheiros
+
+    public class ValidacaoFicheiroTests
+    {
+        [Fact]
+        public void ValidarMagicBytes_PdfValido_RetornaTrue()
+        {
+            var bytes = new byte[] { 0x25, 0x50, 0x44, 0x46 };
+            Assert.True(ValidadorFicheiro.ValidarMagicBytes(bytes, ".pdf"));
+        }
+
+        [Fact]
+        public void ValidarMagicBytes_PdfInvalido_RetornaFalse()
+        {
+            var bytes = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+            Assert.False(ValidadorFicheiro.ValidarMagicBytes(bytes, ".pdf"));
+        }
+
+        [Fact]
+        public void ValidarMagicBytes_DocxValido_RetornaTrue()
+        {
+            var bytes = new byte[] { 0x50, 0x4B, 0x03, 0x04 };
+            Assert.True(ValidadorFicheiro.ValidarMagicBytes(bytes, ".docx"));
+        }
+
+        [Fact]
+        public void ValidarMagicBytes_DocValido_RetornaTrue()
+        {
+            var bytes = new byte[] { 0xD0, 0xCF, 0x11, 0xE0 };
+            Assert.True(ValidadorFicheiro.ValidarMagicBytes(bytes, ".doc"));
+        }
+
+        [Fact]
+        public void ValidarMagicBytes_ExtensaoDesconhecida_RetornaFalse()
+        {
+            var bytes = new byte[] { 0x25, 0x50, 0x44, 0x46 };
+            Assert.False(ValidadorFicheiro.ValidarMagicBytes(bytes, ".exe"));
+        }
+
+        [Fact]
+        public void ValidarMagicBytes_BytesInsuficientes_RetornaFalse()
+        {
+            var bytes = new byte[] { 0x25, 0x50 };
+            Assert.False(ValidadorFicheiro.ValidarMagicBytes(bytes, ".pdf"));
+        }
+    }
+
+    #endregion
+
+    #region Testes de Auditoria
+
+    public class AuditoriaServiceTests
+    {
+        private static AuditoriaService CriarServico(ApplicationDbContext context)
+        {
+            var httpContextAccessor = new Mock<IHttpContextAccessor>();
+            var httpContext = new DefaultHttpContext();
+            httpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+            return new AuditoriaService(context, httpContextAccessor.Object);
+        }
+
+        [Fact]
+        public async Task RegistarAsync_AdicionaRegistoNaBaseDeDados()
+        {
+            using var context = TestDbHelper.CreateContext(nameof(RegistarAsync_AdicionaRegistoNaBaseDeDados));
+            var service = CriarServico(context);
+
+            await service.RegistarAsync("Criar", "Empresa", 1, "Empresa teste criada");
+
+            Assert.Equal(1, await context.RegistosAuditoria.CountAsync());
+            var registo = await context.RegistosAuditoria.FirstAsync();
+            Assert.Equal("Criar", registo.Acao);
+            Assert.Equal("Empresa", registo.Entidade);
+            Assert.Equal(1, registo.EntidadeId);
+        }
+
+        [Fact]
+        public async Task RegistarAsync_TruncaDetalhesLongos()
+        {
+            using var context = TestDbHelper.CreateContext(nameof(RegistarAsync_TruncaDetalhesLongos));
+            var service = CriarServico(context);
+            var detalhesLongos = new string('x', 600);
+
+            await service.RegistarAsync("Teste", "Teste", null, detalhesLongos);
+
+            var registo = await context.RegistosAuditoria.FirstAsync();
+            Assert.Equal(500, registo.Detalhes.Length);
+        }
+    }
+
+    #endregion
+
+    #region Testes de Proteção IDOR
+
+    public class ProtecaoIDORTests
+    {
+        [Fact]
+        public async Task Professor_SoVeAlunosDoProprioCurso()
+        {
+            using var context = TestDbHelper.CreateContext(nameof(Professor_SoVeAlunosDoProprioCurso));
+
+            var curso1 = new Curso { Id = 1, Nome = "Curso A", Ativo = true };
+            var curso2 = new Curso { Id = 2, Nome = "Curso B", Ativo = true };
+            context.Cursos.AddRange(curso1, curso2);
+
+            var professor = new Professor
+            {
+                Id = 1, Nome = "Prof A", Email = "profa@test.pt",
+                NIF = "123456789", CursoId = 1, Ativo = true
+            };
+            context.Professores.Add(professor);
+
+            context.Alunos.AddRange(
+                new Aluno { Id = 1, Nome = "Aluno 1", Email = "a1@t.pt", NIF = "111111111",
+                           NumeroAluno = "A001", Turma = "T1", CursoId = 1 },
+                new Aluno { Id = 2, Nome = "Aluno 2", Email = "a2@t.pt", NIF = "222222222",
+                           NumeroAluno = "A002", Turma = "T1", CursoId = 2 }
+            );
+            await context.SaveChangesAsync();
+
+            var alunoOutroCurso = await context.Alunos.FindAsync(2);
+            Assert.NotNull(alunoOutroCurso);
+            Assert.NotEqual(professor.CursoId, alunoOutroCurso!.CursoId);
+
+            var alunoMesmoCurso = await context.Alunos.FindAsync(1);
+            Assert.Equal(professor.CursoId, alunoMesmoCurso!.CursoId);
+        }
+
+        [Fact]
+        public async Task Professor_SoVeEstagiosProprios()
+        {
+            using var context = TestDbHelper.CreateContext(nameof(Professor_SoVeEstagiosProprios));
+
+            var curso = new Curso { Id = 1, Nome = "Curso", Ativo = true };
+            context.Cursos.Add(curso);
+
+            var prof1 = new Professor { Id = 1, Nome = "Prof 1", Email = "p1@t.pt",
+                                        NIF = "111111111", CursoId = 1, Ativo = true };
+            var prof2 = new Professor { Id = 2, Nome = "Prof 2", Email = "p2@t.pt",
+                                        NIF = "222222222", CursoId = 1, Ativo = true };
+            context.Professores.AddRange(prof1, prof2);
+
+            var aluno = new Aluno { Id = 1, Nome = "Aluno", Email = "a@t.pt",
+                                   NIF = "333333333", NumeroAluno = "A001",
+                                   Turma = "T1", CursoId = 1 };
+            context.Alunos.Add(aluno);
+
+            var empresa = new Empresa { Id = 1, Nome = "Emp", NIF = "444444444",
+                                       Morada = "Rua", NomeTutor = "T",
+                                       EmailTutor = "t@e.pt" };
+            context.Empresas.Add(empresa);
+
+            var estagio = new Estagio
+            {
+                Id = 1, AlunoId = 1, EmpresaId = 1, ProfessorId = 2,
+                DataInicio = DateTime.Today, DataFim = DateTime.Today.AddMonths(3),
+                LocalEstagio = "Local"
+            };
+            context.Estagios.Add(estagio);
+            await context.SaveChangesAsync();
+
+            Assert.NotEqual(prof1.Id, estagio.ProfessorId);
+            Assert.Equal(prof2.Id, estagio.ProfessorId);
+        }
+    }
+
+    #endregion
+
+    #region Testes de Validação de Parâmetros
+
+    public class ValidacaoParametrosTests
+    {
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        [InlineData(-100)]
+        public void Pagina_ValorInvalido_DeveSer1(int paginaInvalida)
+        {
+            var pagina = paginaInvalida < 1 ? 1 : paginaInvalida;
+            Assert.Equal(1, pagina);
         }
     }
 

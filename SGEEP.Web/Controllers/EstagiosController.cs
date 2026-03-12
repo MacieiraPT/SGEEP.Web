@@ -167,6 +167,9 @@ namespace SGEEP.Web.Controllers
             var estagio = await _context.Estagios.FindAsync(id);
             if (estagio == null) return NotFound();
 
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
+
             // Não permitir editar estágios concluídos ou cancelados
             if (estagio.Estado == EstadoEstagio.Concluido ||
                 estagio.Estado == EstadoEstagio.Cancelado)
@@ -206,6 +209,9 @@ namespace SGEEP.Web.Controllers
 
             var estagio = await _context.Estagios.FindAsync(id);
             if (estagio == null) return NotFound();
+
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
 
             if (vm.DataFim <= vm.DataInicio)
             {
@@ -299,6 +305,9 @@ namespace SGEEP.Web.Controllers
 
             if (estagio == null) return NotFound();
 
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
+
             if (estagio.Estado != EstadoEstagio.Ativo)
             {
                 TempData["Erro"] = "Apenas estágios ativos podem ser concluídos.";
@@ -326,6 +335,9 @@ namespace SGEEP.Web.Controllers
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (estagio == null) return NotFound();
+
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
 
             if (estagio.Estado != EstadoEstagio.Ativo)
             {
@@ -366,6 +378,15 @@ namespace SGEEP.Web.Controllers
 
             TempData["Sucesso"] = "Estágio concluído e avaliação registada com sucesso!";
             return RedirectToAction(nameof(Details), new { id = estagio.Id });
+        }
+
+        private async Task<bool> ProfessorTemAcesso(int professorIdDoEstagio)
+        {
+            if (!User.IsInRole("Professor")) return true;
+            var userEmail = User.Identity!.Name;
+            var professor = await _context.Professores
+                .FirstOrDefaultAsync(p => p.Email == userEmail);
+            return professor?.Id == professorIdDoEstagio;
         }
 
         private async Task PopularDropdowns(EstagioViewModel vm)

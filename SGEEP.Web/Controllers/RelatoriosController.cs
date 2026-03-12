@@ -99,6 +99,19 @@ namespace SGEEP.Web.Controllers
                     return View(vm);
                 }
 
+                // Validar magic bytes do ficheiro
+                using (var checkStream = vm.Ficheiro.OpenReadStream())
+                {
+                    var headerBytes = new byte[4];
+                    await checkStream.ReadAsync(headerBytes, 0, 4);
+
+                    if (!Helpers.ValidadorFicheiro.ValidarMagicBytes(headerBytes, extensao))
+                    {
+                        ModelState.AddModelError("Ficheiro", "O conteúdo do ficheiro não corresponde à extensão.");
+                        return View(vm);
+                    }
+                }
+
                 // Guardar ficheiro
                 var nomeUnico = $"{Guid.NewGuid()}{extensao}";
                 var pasta = Path.Combine(_environment.WebRootPath, "uploads", "relatorios");
@@ -123,6 +136,8 @@ namespace SGEEP.Web.Controllers
 
             _context.Relatorios.Add(relatorio);
             await _context.SaveChangesAsync();
+
+            await _auditoria.RegistarAsync("Criar", "Relatorio", relatorio.Id, $"Relatório '{relatorio.Titulo}' submetido (Estágio #{relatorio.EstagioId})");
 
             TempData["Sucesso"] = "Relatório submetido com sucesso!";
             return RedirectToAction(nameof(Index), new { estagioId = vm.EstagioId });
