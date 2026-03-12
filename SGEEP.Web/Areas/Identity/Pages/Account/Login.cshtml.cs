@@ -13,10 +13,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 
 namespace SGEEP.Web.Areas.Identity.Pages.Account
 {
+    [EnableRateLimiting("login")]
     public class LoginModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;

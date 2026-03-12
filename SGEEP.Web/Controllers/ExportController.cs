@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SGEEP.Core.Entities;
 using SGEEP.Core.Enums;
 using SGEEP.Infrastructure.Data;
 
@@ -20,15 +21,29 @@ namespace SGEEP.Web.Controllers
             _context = context;
         }
 
+        private async Task<int?> ObterProfessorId()
+        {
+            if (!User.IsInRole("Professor")) return null;
+            var userEmail = User.Identity!.Name;
+            var professor = await _context.Professores
+                .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo);
+            return professor?.Id;
+        }
+
         // GET: Export/EstagiosExcel
         public async Task<IActionResult> EstagiosExcel()
         {
-            var estagios = await _context.Estagios
+            var query = _context.Estagios
                 .Include(e => e.Aluno).ThenInclude(a => a.Curso)
                 .Include(e => e.Empresa)
                 .Include(e => e.Professor)
-                .OrderByDescending(e => e.DataInicio)
-                .ToListAsync();
+                .AsQueryable();
+
+            var professorId = await ObterProfessorId();
+            if (professorId.HasValue)
+                query = query.Where(e => e.ProfessorId == professorId.Value);
+
+            var estagios = await query.OrderByDescending(e => e.DataInicio).ToListAsync();
 
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Estágios");
@@ -70,12 +85,17 @@ namespace SGEEP.Web.Controllers
         // GET: Export/EstagiosPdf
         public async Task<IActionResult> EstagiosPdf()
         {
-            var estagios = await _context.Estagios
+            var query = _context.Estagios
                 .Include(e => e.Aluno).ThenInclude(a => a.Curso)
                 .Include(e => e.Empresa)
                 .Include(e => e.Professor)
-                .OrderByDescending(e => e.DataInicio)
-                .ToListAsync();
+                .AsQueryable();
+
+            var professorId = await ObterProfessorId();
+            if (professorId.HasValue)
+                query = query.Where(e => e.ProfessorId == professorId.Value);
+
+            var estagios = await query.OrderByDescending(e => e.DataInicio).ToListAsync();
 
             var document = Document.Create(container =>
             {
@@ -143,10 +163,20 @@ namespace SGEEP.Web.Controllers
         // GET: Export/AlunosExcel
         public async Task<IActionResult> AlunosExcel()
         {
-            var alunos = await _context.Alunos
+            var query = _context.Alunos
                 .Include(a => a.Curso)
-                .OrderBy(a => a.Nome)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (User.IsInRole("Professor"))
+            {
+                var userEmail = User.Identity!.Name;
+                var professor = await _context.Professores
+                    .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo);
+                if (professor != null)
+                    query = query.Where(a => a.CursoId == professor.CursoId);
+            }
+
+            var alunos = await query.OrderBy(a => a.Nome).ToListAsync();
 
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Alunos");

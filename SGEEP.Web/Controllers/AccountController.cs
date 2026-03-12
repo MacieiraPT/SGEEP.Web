@@ -63,6 +63,8 @@ namespace SGEEP.Web.Controllers
             // Re-sign in to refresh the cookie (without the claim)
             await _signInManager.RefreshSignInAsync(user);
 
+            await _auditoria.RegistarAsync("AlterarPassword", "Utilizador", null, $"Utilizador '{user.Email}' alterou a sua password");
+
             TempData["Sucesso"] = "Password alterada com sucesso!";
             return RedirectToAction("Index", "Home");
         }

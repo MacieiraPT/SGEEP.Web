@@ -22,6 +22,8 @@ namespace SGEEP.Web.Controllers
             string entidade,
             int pagina = 1)
         {
+            if (pagina < 1) pagina = 1;
+
             var query = _context.RegistosAuditoria.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pesquisa))
