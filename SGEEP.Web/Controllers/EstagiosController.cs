@@ -220,14 +220,37 @@ namespace SGEEP.Web.Controllers
                 return View(vm);
             }
 
+            // Não permitir editar estágios concluídos ou cancelados
+            if (estagio.Estado == EstadoEstagio.Concluido ||
+                estagio.Estado == EstadoEstagio.Cancelado)
+            {
+                TempData["Erro"] = "Não é possível editar um estágio concluído ou cancelado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Validar que as novas datas não invalidam registos de horas existentes
+            var dataInicioNova = DateOnly.FromDateTime(vm.DataInicio);
+            var dataFimNova = DateOnly.FromDateTime(vm.DataFim);
+            var registosForaDoPeriodo = await _context.RegistoHoras
+                .AnyAsync(r => r.EstagioId == id && (r.Data < dataInicioNova || r.Data > dataFimNova));
+
+            if (registosForaDoPeriodo)
+            {
+                ModelState.AddModelError("DataInicio", "Existem registos de horas fora do novo período. Ajuste as datas ou remova os registos primeiro.");
+                await PopularDropdowns(vm);
+                return View(vm);
+            }
+
             estagio.EmpresaId = vm.EmpresaId;
-            estagio.ProfessorId = vm.ProfessorId;
+            // Apenas administradores podem reatribuir o professor orientador
+            if (User.IsInRole("Administrador"))
+                estagio.ProfessorId = vm.ProfessorId;
             estagio.DataInicio = vm.DataInicio;
             estagio.DataFim = vm.DataFim;
             estagio.LocalEstagio = vm.LocalEstagio;
             estagio.TotalHorasPrevistas = vm.TotalHorasPrevistas;
             estagio.Observacoes = vm.Observacoes;
-            estagio.Estado = vm.Estado;
+            // Estado não é alterável via edição — usar ações específicas (Ativar/Cancelar/Concluir)
 
             await _context.SaveChangesAsync();
 
@@ -245,6 +268,9 @@ namespace SGEEP.Web.Controllers
                 .Include(e => e.Empresa)
                 .FirstOrDefaultAsync(e => e.Id == id);
             if (estagio == null) return NotFound();
+
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
 
             if (estagio.Estado != EstadoEstagio.Pendente)
             {
@@ -279,6 +305,9 @@ namespace SGEEP.Web.Controllers
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (estagio == null) return NotFound();
+
+            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+                return Forbid();
 
             if (estagio.Estado == EstadoEstagio.Concluido)
             {
@@ -343,6 +372,28 @@ namespace SGEEP.Web.Controllers
             {
                 TempData["Erro"] = "Apenas estágios ativos podem ser concluídos.";
                 return RedirectToAction(nameof(Index));
+            }
+
+            // Verificar horas mínimas validadas
+            var horasValidadas = await _context.RegistoHoras
+                .Where(r => r.EstagioId == id && r.Estado == EstadoHoras.Validado)
+                .ToListAsync();
+            var totalHorasValidadas = horasValidadas.Sum(r => r.TotalHoras);
+
+            if (totalHorasValidadas < estagio.TotalHorasPrevistas)
+            {
+                TempData["Erro"] = $"O aluno tem apenas {totalHorasValidadas:F1}h validadas de {estagio.TotalHorasPrevistas}h previstas. Não é possível concluir o estágio sem atingir o mínimo de horas.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Verificar que existe pelo menos um relatório aprovado
+            var temRelatorioAprovado = await _context.Relatorios
+                .AnyAsync(r => r.EstagioId == id && r.Estado == EstadoRelatorio.Aprovado);
+
+            if (!temRelatorioAprovado)
+            {
+                TempData["Erro"] = "Não é possível concluir o estágio sem pelo menos um relatório aprovado.";
+                return RedirectToAction(nameof(Details), new { id });
             }
 
             if (!ModelState.IsValid)
