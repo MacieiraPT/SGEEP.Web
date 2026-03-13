@@ -49,13 +49,14 @@ namespace SGEEP.Web.Services
 
             try
             {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
                 using var cliente = new SmtpClient();
-                await cliente.ConnectAsync(_settings.ServidorSmtp, _settings.Porta, _settings.UsarSsl);
+                await cliente.ConnectAsync(_settings.ServidorSmtp, _settings.Porta, _settings.UsarSsl, cts.Token);
 
                 if (!string.IsNullOrEmpty(_settings.Utilizador))
-                    await cliente.AuthenticateAsync(_settings.Utilizador, _settings.Palavra);
+                    await cliente.AuthenticateAsync(_settings.Utilizador, _settings.Palavra, cts.Token);
 
-                await cliente.SendAsync(mensagem);
+                await cliente.SendAsync(mensagem, cancellationToken: cts.Token);
                 await cliente.DisconnectAsync(true);
 
                 _logger.LogInformation("Email enviado para {Destinatarios}: {Assunto}",
