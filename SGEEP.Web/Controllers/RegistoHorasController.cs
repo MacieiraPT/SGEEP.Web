@@ -206,7 +206,10 @@ namespace SGEEP.Web.Controllers
             if (aluno != null && !string.IsNullOrEmpty(aluno.Email))
                 await _emailService.EnviarAsync(aluno.Email,
                     "SGEEP — Horas Validadas",
-                    $"<p>Caro(a) {aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi validado.</p><p>Cumprimentos,<br/>SGEEP</p>");
+                    EmailTemplates.Envolver(
+                        $"<p>Caro(a) <strong>{aluno.Nome}</strong>,</p>" +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#15803d;font-weight:600;\">validado</span>.</p>" +
+                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
 
             TempData["Sucesso"] = $"Registo de {registo.Data:dd/MM/yyyy} validado!";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
@@ -250,7 +253,10 @@ namespace SGEEP.Web.Controllers
             if (aluno != null && !string.IsNullOrEmpty(aluno.Email))
                 await _emailService.EnviarAsync(aluno.Email,
                     "SGEEP — Horas Rejeitadas",
-                    $"<p>Caro(a) {aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi rejeitado. Verifique e resubmeta.</p><p>Cumprimentos,<br/>SGEEP</p>");
+                    EmailTemplates.Envolver(
+                        $"<p>Caro(a) <strong>{aluno.Nome}</strong>,</p>" +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#dc2626;font-weight:600;\">rejeitado</span>. Verifique e resubmeta.</p>" +
+                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
 
             TempData["Erro"] = $"Registo de {registo.Data:dd/MM/yyyy} rejeitado.";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });

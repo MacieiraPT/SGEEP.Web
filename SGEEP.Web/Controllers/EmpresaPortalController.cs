@@ -115,7 +115,10 @@ namespace SGEEP.Web.Controllers
             if (!string.IsNullOrEmpty(registo.Estagio.Aluno?.Email))
                 await _emailService.EnviarAsync(registo.Estagio.Aluno.Email,
                     "SGEEP — Horas Validadas",
-                    $"<p>Caro(a) {registo.Estagio.Aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi validado pela empresa.</p><p>Cumprimentos,<br/>SGEEP</p>");
+                    EmailTemplates.Envolver(
+                        $"<p>Caro(a) <strong>{registo.Estagio.Aluno.Nome}</strong>,</p>" +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#15803d;font-weight:600;\">validado</span> pela empresa.</p>" +
+                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
 
             TempData["Sucesso"] = "Registo de horas validado com sucesso.";
             return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
@@ -164,7 +167,10 @@ namespace SGEEP.Web.Controllers
             if (!string.IsNullOrEmpty(registo.Estagio.Aluno?.Email))
                 await _emailService.EnviarAsync(registo.Estagio.Aluno.Email,
                     "SGEEP — Horas Rejeitadas",
-                    $"<p>Caro(a) {registo.Estagio.Aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi rejeitado pela empresa. Verifique e resubmeta.</p><p>Cumprimentos,<br/>SGEEP</p>");
+                    EmailTemplates.Envolver(
+                        $"<p>Caro(a) <strong>{registo.Estagio.Aluno.Nome}</strong>,</p>" +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#dc2626;font-weight:600;\">rejeitado</span> pela empresa. Verifique e resubmeta.</p>" +
+                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
 
             TempData["Sucesso"] = "Registo de horas rejeitado.";
             return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });

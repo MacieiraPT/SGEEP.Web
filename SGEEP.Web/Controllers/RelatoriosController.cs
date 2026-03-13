@@ -213,9 +213,15 @@ namespace SGEEP.Web.Controllers
             if (estagioCom?.Aluno != null && !string.IsNullOrEmpty(estagioCom.Aluno.Email))
             {
                 var estadoTexto = acao == "aprovar" ? "aprovado" : "rejeitado";
+                var corEstado = acao == "aprovar" ? "#15803d" : "#dc2626";
                 await _emailService.EnviarAsync(estagioCom.Aluno.Email,
-                    $"SGEEP — Relatório {estadoTexto}",
-                    $"<p>Caro(a) {estagioCom.Aluno.Nome},</p><p>O seu relatório <strong>{relatorio.Titulo}</strong> foi <strong>{estadoTexto}</strong>.</p>{(string.IsNullOrEmpty(vm.ComentarioProfessor) ? "" : $"<p>Comentário: {vm.ComentarioProfessor}</p>")}<p>Cumprimentos,<br/>SGEEP</p>");
+                    $"SGEEP — Relatório {char.ToUpper(estadoTexto[0])}{estadoTexto[1..]}",
+                    EmailTemplates.Envolver(
+                        $"<p>Caro(a) <strong>{estagioCom.Aluno.Nome}</strong>,</p>" +
+                        $"<p>O seu relat&oacute;rio <strong>{relatorio.Titulo}</strong> foi <span style=\"color:{corEstado};font-weight:600;\">{estadoTexto}</span>.</p>" +
+                        (string.IsNullOrEmpty(vm.ComentarioProfessor) ? "" :
+                            $"<div style=\"background:#f8fafc;border-left:4px solid #1d4ed8;padding:12px 16px;margin:16px 0;border-radius:0 6px 6px 0;\"><strong>Coment&aacute;rio:</strong> {vm.ComentarioProfessor}</div>") +
+                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
             }
 
             TempData["Sucesso"] = acao == "aprovar"

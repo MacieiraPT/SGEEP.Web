@@ -130,11 +130,14 @@ namespace SGEEP.Web.Controllers
             if (!string.IsNullOrEmpty(user.Email))
                 await _emailService.EnviarAsync(user.Email,
                     "SGEEP — Password Reposta",
-                    $"<p>A sua password no SGEEP foi reposta pelo administrador.</p>" +
-                    $"<p><strong>Email:</strong> {user.Email}<br/>" +
-                    $"<strong>Nova password temporária:</strong> {novaPassword}</p>" +
-                    $"<p>Deverá alterar a password no próximo acesso.</p>" +
-                    $"<p>Cumprimentos,<br/>SGEEP</p>");
+                    EmailTemplates.Envolver(
+                        $"<p>A sua password no SGEEP foi reposta pelo administrador.</p>" +
+                        $"<table style=\"margin:16px 0;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0;padding:16px 20px;border-collapse:collapse;\">" +
+                        $"<tr><td style=\"padding:4px 12px 4px 0;\"><strong>Email:</strong></td><td>{user.Email}</td></tr>" +
+                        $"<tr><td style=\"padding:4px 12px 4px 0;\"><strong>Nova password temporária:</strong></td><td><code style=\"background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:14px;\">{novaPassword}</code></td></tr>" +
+                        $"</table>" +
+                        $"<p style=\"color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:12px 16px;\">&#9888; Deverá alterar a password no pr&oacute;ximo acesso.</p>" +
+                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
 
             TempData["Sucesso"] = $"Password de {user.Email} reposta! Nova password temporária: {novaPassword}";
             return RedirectToAction("Index", "Home");
