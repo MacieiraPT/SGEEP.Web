@@ -17,17 +17,20 @@ namespace SGEEP.Web.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IWebHostEnvironment _environment;
         private readonly AuditoriaService _auditoria;
+        private readonly IEmailService _emailService;
 
         public RelatoriosController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
             IWebHostEnvironment environment,
-            AuditoriaService auditoria)
+            AuditoriaService auditoria,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
             _auditoria = auditoria;
+            _emailService = emailService;
         }
 
         // GET: Relatorios/Index/5 (por estágio)
@@ -201,6 +204,19 @@ namespace SGEEP.Web.Controllers
 
             var acaoAudit = acao == "aprovar" ? "Aprovar" : "Rejeitar";
             await _auditoria.RegistarAsync(acaoAudit, "Relatorio", relatorio.Id, $"Relatório '{relatorio.Titulo}' {acaoAudit.ToLower()}do (Estágio #{relatorio.EstagioId})");
+
+            // Enviar email ao aluno sobre o resultado da avaliação do relatório
+            var estagioCom = await _context.Estagios
+                .Include(e => e.Aluno)
+                .FirstOrDefaultAsync(e => e.Id == relatorio.EstagioId);
+
+            if (estagioCom?.Aluno != null && !string.IsNullOrEmpty(estagioCom.Aluno.Email))
+            {
+                var estadoTexto = acao == "aprovar" ? "aprovado" : "rejeitado";
+                await _emailService.EnviarAsync(estagioCom.Aluno.Email,
+                    $"SGEEP — Relatório {estadoTexto}",
+                    $"<p>Caro(a) {estagioCom.Aluno.Nome},</p><p>O seu relatório <strong>{relatorio.Titulo}</strong> foi <strong>{estadoTexto}</strong>.</p>{(string.IsNullOrEmpty(vm.ComentarioProfessor) ? "" : $"<p>Comentário: {vm.ComentarioProfessor}</p>")}<p>Cumprimentos,<br/>SGEEP</p>");
+            }
 
             TempData["Sucesso"] = acao == "aprovar"
                 ? "Relatório aprovado com sucesso!"

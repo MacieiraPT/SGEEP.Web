@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Middleware;
+using SGEEP.Web.Models;
 using SGEEP.Web.Services;
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -41,6 +42,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Serviços
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<AuditoriaService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpContextAccessor();
 
 // MVC
