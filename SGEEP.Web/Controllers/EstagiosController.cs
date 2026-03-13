@@ -17,12 +17,14 @@ namespace SGEEP.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly NotificacaoService _notificacaoService;
         private readonly AuditoriaService _auditoria;
+        private readonly IEmailService _emailService;
 
-        public EstagiosController(ApplicationDbContext context, NotificacaoService notificacaoService, AuditoriaService auditoria)
+        public EstagiosController(ApplicationDbContext context, NotificacaoService notificacaoService, AuditoriaService auditoria, IEmailService emailService)
         {
             _context = context;
             _notificacaoService = notificacaoService;
             _auditoria = auditoria;
+            _emailService = emailService;
         }
 
         // GET: Estagios
@@ -291,6 +293,18 @@ namespace SGEEP.Web.Controllers
                 await _notificacaoService.CriarAsync(estagio.Empresa.ApplicationUserId,
                     "Novo Estágio Ativo", $"O estágio do aluno {estagio.Aluno?.Nome} foi ativado.");
 
+            // Enviar email ao aluno
+            if (!string.IsNullOrEmpty(estagio.Aluno?.Email))
+                await _emailService.EnviarAsync(estagio.Aluno.Email,
+                    "SGEEP — Estágio Ativado",
+                    $"<p>Caro(a) {estagio.Aluno.Nome},</p><p>O seu estágio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi ativado.</p><p>Cumprimentos,<br/>SGEEP</p>");
+
+            // Enviar email à empresa
+            if (!string.IsNullOrEmpty(estagio.Empresa?.EmailTutor))
+                await _emailService.EnviarAsync(estagio.Empresa.EmailTutor,
+                    "SGEEP — Novo Estágio Ativo",
+                    $"<p>Caro(a) {estagio.Empresa?.NomeTutor},</p><p>O estágio do aluno <strong>{estagio.Aluno?.Nome}</strong> foi ativado.</p><p>Cumprimentos,<br/>SGEEP</p>");
+
             TempData["Sucesso"] = "Estágio ativado com sucesso!";
             return RedirectToAction(nameof(Index));
         }
@@ -424,6 +438,12 @@ namespace SGEEP.Web.Controllers
             if (!string.IsNullOrEmpty(estagio.Aluno?.ApplicationUserId))
                 await _notificacaoService.CriarAsync(estagio.Aluno.ApplicationUserId,
                     "Estágio Concluído", $"O seu estágio foi concluído com nota final de {vm.NotaFinal:F1}.");
+
+            // Enviar email ao aluno
+            if (!string.IsNullOrEmpty(estagio.Aluno?.Email))
+                await _emailService.EnviarAsync(estagio.Aluno.Email,
+                    "SGEEP — Estágio Concluído",
+                    $"<p>Caro(a) {estagio.Aluno.Nome},</p><p>O seu estágio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi concluído com nota final de <strong>{vm.NotaFinal:F1}</strong>.</p><p>Cumprimentos,<br/>SGEEP</p>");
 
             await _auditoria.RegistarAsync("Concluir", "Estagio", estagio.Id, $"Estágio #{estagio.Id} concluído com nota final {vm.NotaFinal:F1}");
 

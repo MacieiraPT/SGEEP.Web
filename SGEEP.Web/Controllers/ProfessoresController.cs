@@ -19,15 +19,18 @@ namespace SGEEP.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AuditoriaService _auditoria;
+        private readonly IEmailService _emailService;
 
         public ProfessoresController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
-            AuditoriaService auditoria)
+            AuditoriaService auditoria,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _auditoria = auditoria;
+            _emailService = emailService;
         }
 
         // GET: Professores
@@ -136,6 +139,16 @@ namespace SGEEP.Web.Controllers
             await _context.SaveChangesAsync();
 
             await _auditoria.RegistarAsync("Criar", "Professor", professor.Id, $"Professor '{professor.Nome}' criado com email {professor.Email}");
+
+            // Enviar email com credenciais de acesso
+            await _emailService.EnviarAsync(vm.Email,
+                "SGEEP — Conta Criada",
+                $"<p>Caro(a) {vm.Nome},</p>" +
+                $"<p>Foi criada uma conta no SGEEP para si.</p>" +
+                $"<p><strong>Email:</strong> {vm.Email}<br/>" +
+                $"<strong>Password temporária:</strong> {passwordTemporaria}</p>" +
+                $"<p>Deverá alterar a password no primeiro acesso.</p>" +
+                $"<p>Cumprimentos,<br/>SGEEP</p>");
 
             TempData["Sucesso"] = $"Professor {professor.Nome} criado! Login: {vm.Email} | Password temporária: {passwordTemporaria}";
             return RedirectToAction(nameof(Index));

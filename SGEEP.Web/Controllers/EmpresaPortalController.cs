@@ -15,17 +15,20 @@ namespace SGEEP.Web.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly NotificacaoService _notificacaoService;
         private readonly AuditoriaService _auditoria;
+        private readonly IEmailService _emailService;
 
         public EmpresaPortalController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
             NotificacaoService notificacaoService,
-            AuditoriaService auditoria)
+            AuditoriaService auditoria,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _notificacaoService = notificacaoService;
             _auditoria = auditoria;
+            _emailService = emailService;
         }
 
         private async Task<int?> GetEmpresaIdAsync()
@@ -108,6 +111,12 @@ namespace SGEEP.Web.Controllers
                 await _notificacaoService.CriarAsync(registo.Estagio.Aluno.ApplicationUserId,
                     "Horas Validadas", $"O registo de horas do dia {registo.Data:dd/MM/yyyy} foi validado.");
 
+            // Enviar email ao aluno
+            if (!string.IsNullOrEmpty(registo.Estagio.Aluno?.Email))
+                await _emailService.EnviarAsync(registo.Estagio.Aluno.Email,
+                    "SGEEP — Horas Validadas",
+                    $"<p>Caro(a) {registo.Estagio.Aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi validado pela empresa.</p><p>Cumprimentos,<br/>SGEEP</p>");
+
             TempData["Sucesso"] = "Registo de horas validado com sucesso.";
             return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
         }
@@ -150,6 +159,12 @@ namespace SGEEP.Web.Controllers
             if (!string.IsNullOrEmpty(registo.Estagio.Aluno?.ApplicationUserId))
                 await _notificacaoService.CriarAsync(registo.Estagio.Aluno.ApplicationUserId,
                     "Horas Rejeitadas", $"O registo de horas do dia {registo.Data:dd/MM/yyyy} foi rejeitado. Verifique e resubmeta.");
+
+            // Enviar email ao aluno
+            if (!string.IsNullOrEmpty(registo.Estagio.Aluno?.Email))
+                await _emailService.EnviarAsync(registo.Estagio.Aluno.Email,
+                    "SGEEP — Horas Rejeitadas",
+                    $"<p>Caro(a) {registo.Estagio.Aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi rejeitado pela empresa. Verifique e resubmeta.</p><p>Cumprimentos,<br/>SGEEP</p>");
 
             TempData["Sucesso"] = "Registo de horas rejeitado.";
             return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });

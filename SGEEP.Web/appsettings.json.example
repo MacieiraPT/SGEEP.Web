@@ -10,5 +10,14 @@
       "Microsoft.AspNetCore": "Warning"
     }
   },
-  "AllowedHosts": "*"
+  "AllowedHosts": "*",
+  "Email": {
+    "ServidorSmtp": "",
+    "Porta": 587,
+    "UsarSsl": true,
+    "Utilizador": "",
+    "Palavra": "",
+    "NomeRemetente": "SGEEP",
+    "EmailRemetente": ""
+  }
 }

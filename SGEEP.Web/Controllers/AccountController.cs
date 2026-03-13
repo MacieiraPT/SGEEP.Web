@@ -17,17 +17,20 @@ namespace SGEEP.Web.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ApplicationDbContext _context;
         private readonly AuditoriaService _auditoria;
+        private readonly IEmailService _emailService;
 
         public AccountController(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             ApplicationDbContext context,
-            AuditoriaService auditoria)
+            AuditoriaService auditoria,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
             _auditoria = auditoria;
+            _emailService = emailService;
         }
 
         // GET: Account/ChangePassword
@@ -122,6 +125,16 @@ namespace SGEEP.Web.Controllers
             }
 
             await _auditoria.RegistarAsync("ResetPassword", "Utilizador", null, $"Password do utilizador '{user.Email}' foi reposta pelo administrador");
+
+            // Enviar email com nova password
+            if (!string.IsNullOrEmpty(user.Email))
+                await _emailService.EnviarAsync(user.Email,
+                    "SGEEP — Password Reposta",
+                    $"<p>A sua password no SGEEP foi reposta pelo administrador.</p>" +
+                    $"<p><strong>Email:</strong> {user.Email}<br/>" +
+                    $"<strong>Nova password temporária:</strong> {novaPassword}</p>" +
+                    $"<p>Deverá alterar a password no próximo acesso.</p>" +
+                    $"<p>Cumprimentos,<br/>SGEEP</p>");
 
             TempData["Sucesso"] = $"Password de {user.Email} reposta! Nova password temporária: {novaPassword}";
             return RedirectToAction("Index", "Home");

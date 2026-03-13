@@ -554,4 +554,61 @@ namespace SGEEP.Tests
     }
 
     #endregion
+
+    #region Testes do EmailService
+
+    public class EmailServiceTests
+    {
+        private static SGEEP.Web.Services.EmailService CriarServico(string servidorSmtp = "")
+        {
+            var settings = new Microsoft.Extensions.Options.OptionsWrapper<SGEEP.Web.Models.EmailSettings>(
+                new SGEEP.Web.Models.EmailSettings
+                {
+                    ServidorSmtp = servidorSmtp,
+                    Porta = 587,
+                    UsarSsl = true,
+                    Utilizador = "",
+                    Palavra = "",
+                    NomeRemetente = "SGEEP",
+                    EmailRemetente = "noreply@sgeep.pt"
+                });
+
+            var logger = new Mock<Microsoft.Extensions.Logging.ILogger<SGEEP.Web.Services.EmailService>>();
+            return new SGEEP.Web.Services.EmailService(settings, logger.Object);
+        }
+
+        [Fact]
+        public async Task EnviarAsync_SmtpNaoConfigurado_NaoLancaExcecao()
+        {
+            var service = CriarServico(servidorSmtp: "");
+            // Não deve lançar excepção — apenas regista aviso
+            await service.EnviarAsync("dest@teste.pt", "Assunto", "<p>Corpo</p>");
+        }
+
+        [Fact]
+        public async Task EnviarAsync_DestinatarioVazio_NaoLancaExcecao()
+        {
+            var service = CriarServico(servidorSmtp: "smtp.test.local");
+            // Destinatário vazio — não deve lançar excepção
+            await service.EnviarAsync("", "Assunto", "<p>Corpo</p>");
+        }
+
+        [Fact]
+        public async Task EnviarAsync_MultiplosSemSmtp_NaoLancaExcecao()
+        {
+            var service = CriarServico(servidorSmtp: "");
+            await service.EnviarAsync(new[] { "a@test.pt", "b@test.pt" }, "Assunto", "<p>Corpo</p>");
+        }
+
+        [Fact]
+        public void EmailSettings_ValoresPorOmissao_Corretos()
+        {
+            var settings = new SGEEP.Web.Models.EmailSettings();
+            Assert.Equal(587, settings.Porta);
+            Assert.True(settings.UsarSsl);
+            Assert.Equal("SGEEP", settings.NomeRemetente);
+        }
+    }
+
+    #endregion
 }

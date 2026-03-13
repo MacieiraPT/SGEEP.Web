@@ -16,15 +16,18 @@ namespace SGEEP.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AuditoriaService _auditoria;
+        private readonly IEmailService _emailService;
 
         public RegistoHorasController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
-            AuditoriaService auditoria)
+            AuditoriaService auditoria,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _auditoria = auditoria;
+            _emailService = emailService;
         }
 
         // GET: RegistoHoras/Estagio/5
@@ -198,6 +201,13 @@ namespace SGEEP.Web.Controllers
 
             await _auditoria.RegistarAsync("Validar", "RegistoHoras", registo.Id, $"Registo de horas de {registo.Data:dd/MM/yyyy} validado (Estágio #{registo.EstagioId})");
 
+            // Enviar email ao aluno
+            var aluno = await _context.Alunos.FirstOrDefaultAsync(a => a.Id == registo.Estagio.AlunoId);
+            if (aluno != null && !string.IsNullOrEmpty(aluno.Email))
+                await _emailService.EnviarAsync(aluno.Email,
+                    "SGEEP — Horas Validadas",
+                    $"<p>Caro(a) {aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi validado.</p><p>Cumprimentos,<br/>SGEEP</p>");
+
             TempData["Sucesso"] = $"Registo de {registo.Data:dd/MM/yyyy} validado!";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
         }
@@ -234,6 +244,13 @@ namespace SGEEP.Web.Controllers
             await _context.SaveChangesAsync();
 
             await _auditoria.RegistarAsync("Rejeitar", "RegistoHoras", registo.Id, $"Registo de horas de {registo.Data:dd/MM/yyyy} rejeitado (Estágio #{registo.EstagioId})");
+
+            // Enviar email ao aluno
+            var aluno = await _context.Alunos.FirstOrDefaultAsync(a => a.Id == registo.Estagio.AlunoId);
+            if (aluno != null && !string.IsNullOrEmpty(aluno.Email))
+                await _emailService.EnviarAsync(aluno.Email,
+                    "SGEEP — Horas Rejeitadas",
+                    $"<p>Caro(a) {aluno.Nome},</p><p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi rejeitado. Verifique e resubmeta.</p><p>Cumprimentos,<br/>SGEEP</p>");
 
             TempData["Erro"] = $"Registo de {registo.Data:dd/MM/yyyy} rejeitado.";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
