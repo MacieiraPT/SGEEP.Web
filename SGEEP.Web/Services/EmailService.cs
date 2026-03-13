@@ -1,4 +1,5 @@
 using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using SGEEP.Web.Models;
@@ -51,7 +52,7 @@ namespace SGEEP.Web.Services
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
                 using var cliente = new SmtpClient();
-                await cliente.ConnectAsync(_settings.ServidorSmtp, _settings.Porta, _settings.UsarSsl, cts.Token);
+                await cliente.ConnectAsync(_settings.ServidorSmtp, _settings.Porta, SecureSocketOptions.Auto, cts.Token);
 
                 if (!string.IsNullOrEmpty(_settings.Utilizador))
                     await cliente.AuthenticateAsync(_settings.Utilizador, _settings.Palavra, cts.Token);
