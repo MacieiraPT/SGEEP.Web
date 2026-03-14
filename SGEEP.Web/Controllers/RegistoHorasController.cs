@@ -207,9 +207,9 @@ namespace SGEEP.Web.Controllers
                 await _emailService.EnviarAsync(aluno.Email,
                     "SGEEP — Horas Validadas",
                     EmailTemplates.Envolver(
-                        $"<p>Caro(a) <strong>{aluno.Nome}</strong>,</p>" +
-                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#15803d;font-weight:600;\">validado</span>.</p>" +
-                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                        EmailTemplates.Saudacao(aluno.Nome) +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi {EmailTemplates.BadgeEstado("validado", "sucesso")}.</p>" +
+                        EmailTemplates.Assinatura()));
 
             TempData["Sucesso"] = $"Registo de {registo.Data:dd/MM/yyyy} validado!";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });
@@ -254,9 +254,10 @@ namespace SGEEP.Web.Controllers
                 await _emailService.EnviarAsync(aluno.Email,
                     "SGEEP — Horas Rejeitadas",
                     EmailTemplates.Envolver(
-                        $"<p>Caro(a) <strong>{aluno.Nome}</strong>,</p>" +
-                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#dc2626;font-weight:600;\">rejeitado</span>. Verifique e resubmeta.</p>" +
-                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                        EmailTemplates.Saudacao(aluno.Nome) +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi {EmailTemplates.BadgeEstado("rejeitado", "erro")}.</p>" +
+                        EmailTemplates.CaixaAviso("Verifique e resubmeta o registo de horas.") +
+                        EmailTemplates.Assinatura()));
 
             TempData["Erro"] = $"Registo de {registo.Data:dd/MM/yyyy} rejeitado.";
             return RedirectToAction(nameof(Index), new { estagioId = registo.EstagioId });

@@ -116,9 +116,9 @@ namespace SGEEP.Web.Controllers
                 await _emailService.EnviarAsync(registo.Estagio.Aluno.Email,
                     "SGEEP — Horas Validadas",
                     EmailTemplates.Envolver(
-                        $"<p>Caro(a) <strong>{registo.Estagio.Aluno.Nome}</strong>,</p>" +
-                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#15803d;font-weight:600;\">validado</span> pela empresa.</p>" +
-                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                        EmailTemplates.Saudacao(registo.Estagio.Aluno.Nome) +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi {EmailTemplates.BadgeEstado("validado", "sucesso")} pela empresa.</p>" +
+                        EmailTemplates.Assinatura()));
 
             TempData["Sucesso"] = "Registo de horas validado com sucesso.";
             return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
@@ -168,9 +168,10 @@ namespace SGEEP.Web.Controllers
                 await _emailService.EnviarAsync(registo.Estagio.Aluno.Email,
                     "SGEEP — Horas Rejeitadas",
                     EmailTemplates.Envolver(
-                        $"<p>Caro(a) <strong>{registo.Estagio.Aluno.Nome}</strong>,</p>" +
-                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi <span style=\"color:#dc2626;font-weight:600;\">rejeitado</span> pela empresa. Verifique e resubmeta.</p>" +
-                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                        EmailTemplates.Saudacao(registo.Estagio.Aluno.Nome) +
+                        $"<p>O registo de horas do dia <strong>{registo.Data:dd/MM/yyyy}</strong> foi {EmailTemplates.BadgeEstado("rejeitado", "erro")} pela empresa.</p>" +
+                        EmailTemplates.CaixaAviso("Verifique e resubmeta o registo de horas.") +
+                        EmailTemplates.Assinatura()));
 
             TempData["Sucesso"] = "Registo de horas rejeitado.";
             return RedirectToAction("RegistoHoras", new { id = registo.EstagioId });
