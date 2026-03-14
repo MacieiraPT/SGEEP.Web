@@ -144,14 +144,11 @@ namespace SGEEP.Web.Controllers
             await _emailService.EnviarAsync(vm.Email,
                 "SGEEP — Conta Criada",
                 EmailTemplates.Envolver(
-                    $"<p>Caro(a) <strong>{vm.Nome}</strong>,</p>" +
+                    EmailTemplates.Saudacao(vm.Nome) +
                     $"<p>Foi criada uma conta no SGEEP para si.</p>" +
-                    $"<table style=\"margin:16px 0;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0;padding:16px 20px;border-collapse:collapse;\">" +
-                    $"<tr><td style=\"padding:4px 12px 4px 0;\"><strong>Email:</strong></td><td>{vm.Email}</td></tr>" +
-                    $"<tr><td style=\"padding:4px 12px 4px 0;\"><strong>Password tempor&aacute;ria:</strong></td><td><code style=\"background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:14px;\">{passwordTemporaria}</code></td></tr>" +
-                    $"</table>" +
-                    $"<p style=\"color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:12px 16px;\">&#9888; Dever&aacute; alterar a password no primeiro acesso.</p>" +
-                    $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                    EmailTemplates.TabelaCredenciais(vm.Email, passwordTemporaria) +
+                    EmailTemplates.CaixaAviso("Deverá alterar a password no primeiro acesso.") +
+                    EmailTemplates.Assinatura()));
 
             TempData["Sucesso"] = $"Professor {professor.Nome} criado! Login: {vm.Email} | Password temporária: {passwordTemporaria}";
             return RedirectToAction(nameof(Index));

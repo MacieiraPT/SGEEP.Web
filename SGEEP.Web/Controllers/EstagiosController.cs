@@ -315,18 +315,18 @@ namespace SGEEP.Web.Controllers
                 await _emailService.EnviarAsync(estagio.Aluno.Email,
                     "SGEEP — Estágio Ativado",
                     EmailTemplates.Envolver(
-                        $"<p>Caro(a) <strong>{estagio.Aluno.Nome}</strong>,</p>" +
-                        $"<p>O seu est&aacute;gio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi <span style=\"color:#15803d;font-weight:600;\">ativado</span>.</p>" +
-                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                        EmailTemplates.Saudacao(estagio.Aluno.Nome) +
+                        $"<p>O seu estágio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi {EmailTemplates.BadgeEstado("ativado", "sucesso")}.</p>" +
+                        EmailTemplates.Assinatura()));
 
             // Enviar email à empresa
             if (!string.IsNullOrEmpty(estagio.Empresa?.EmailTutor))
                 await _emailService.EnviarAsync(estagio.Empresa.EmailTutor,
                     "SGEEP — Novo Estágio Ativo",
                     EmailTemplates.Envolver(
-                        $"<p>Caro(a) <strong>{estagio.Empresa?.NomeTutor}</strong>,</p>" +
-                        $"<p>O est&aacute;gio do aluno <strong>{estagio.Aluno?.Nome}</strong> foi <span style=\"color:#15803d;font-weight:600;\">ativado</span>.</p>" +
-                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                        EmailTemplates.Saudacao(estagio.Empresa?.NomeTutor ?? "Tutor") +
+                        $"<p>O estágio do aluno <strong>{estagio.Aluno?.Nome}</strong> foi {EmailTemplates.BadgeEstado("ativado", "sucesso")}.</p>" +
+                        EmailTemplates.Assinatura()));
 
             TempData["Sucesso"] = "Estágio ativado com sucesso!";
             return RedirectToAction(nameof(Index));
@@ -474,12 +474,10 @@ namespace SGEEP.Web.Controllers
                 await _emailService.EnviarAsync(estagio.Aluno.Email,
                     "SGEEP — Estágio Concluído",
                     EmailTemplates.Envolver(
-                        $"<p>Caro(a) <strong>{estagio.Aluno.Nome}</strong>,</p>" +
-                        $"<p>O seu est&aacute;gio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi <strong>conclu&iacute;do</strong>.</p>" +
-                        $"<table style=\"margin:16px 0;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0;padding:16px 20px;border-collapse:collapse;\">" +
-                        $"<tr><td style=\"padding:4px 12px 4px 0;\"><strong>Nota final:</strong></td><td style=\"font-size:20px;font-weight:700;color:#1d4ed8;\">{vm.NotaFinal:F1}</td></tr>" +
-                        $"</table>" +
-                        $"<p style=\"margin-top:24px;\">Cumprimentos,<br/><strong>SGEEP</strong></p>"));
+                        EmailTemplates.Saudacao(estagio.Aluno.Nome) +
+                        $"<p>O seu estágio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi {EmailTemplates.BadgeEstado("concluído", "sucesso")}.</p>" +
+                        EmailTemplates.TabelaInfo("Nota Final", $"{vm.NotaFinal:F1}", "#1e40af", "24px") +
+                        EmailTemplates.Assinatura()));
 
             await _auditoria.RegistarAsync("Concluir", "Estagio", estagio.Id, $"Estágio #{estagio.Id} concluído com nota final {vm.NotaFinal:F1}");
 
