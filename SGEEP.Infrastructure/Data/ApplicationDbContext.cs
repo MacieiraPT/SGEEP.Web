@@ -26,12 +26,6 @@ namespace SGEEP.Infrastructure.Data
         {
             base.OnModelCreating(builder);
 
-            // Aluno → Estágio (1:N)
-            builder.Entity<Aluno>()
-                .HasMany(a => a.Estagios)
-                .WithOne(e => e.Aluno)
-                .HasForeignKey(e => e.AlunoId);
-
             // Professor → Estágios (1:N)
             builder.Entity<Professor>()
                 .HasMany(p => p.Estagios)
@@ -78,6 +72,23 @@ namespace SGEEP.Infrastructure.Data
             builder.Entity<Empresa>()
                 .HasIndex(e => e.NIF)
                 .IsUnique();
+
+            // Aluno - NIF único
+            builder.Entity<Aluno>()
+                .HasIndex(a => a.NIF)
+                .IsUnique();
+
+            // Professor - NIF único
+            builder.Entity<Professor>()
+                .HasIndex(p => p.NIF)
+                .IsUnique();
+
+            // Remover shadow property AlunoId1 — configurar explicitamente a relação
+            builder.Entity<Estagio>()
+                .HasOne(e => e.Aluno)
+                .WithMany(a => a.Estagios)
+                .HasForeignKey(e => e.AlunoId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Seed dos 8 cursos
             builder.Entity<Curso>().HasData(

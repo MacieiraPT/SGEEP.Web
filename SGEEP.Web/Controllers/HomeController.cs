@@ -36,11 +36,14 @@ namespace SGEEP.Web.Controllers
 
         [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public IActionResult Error(int? statusCode = null)
         {
+            var code = statusCode ?? HttpContext.Response.StatusCode;
+
             return View(new ErrorViewModel
             {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                StatusCode = code
             });
         }
     }

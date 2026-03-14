@@ -1,25 +1,207 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    Layout = null;
+
+    var code = Model.StatusCode > 0 ? Model.StatusCode : 500;
+
+    string titulo;
+    string mensagem;
+    string icone;
+    string cor;
+
+    switch (code)
+    {
+        case 400:
+            titulo = "Pedido Inválido";
+            mensagem = "O pedido enviado não pôde ser processado. Verifique os dados e tente novamente.";
+            icone = "bi-x-octagon";
+            cor = "#e67e22";
+            break;
+        case 403:
+            titulo = "Acesso Negado";
+            mensagem = "Não tem permissão para aceder a esta página. Se acha que isto é um erro, contacte o administrador.";
+            icone = "bi-shield-lock";
+            cor = "#e74c3c";
+            break;
+        case 404:
+            titulo = "Página Não Encontrada";
+            mensagem = "A página que procura não existe ou foi movida. Verifique o endereço e tente novamente.";
+            icone = "bi-search";
+            cor = "#3498db";
+            break;
+        case 429:
+            titulo = "Demasiados Pedidos";
+            mensagem = "Excedeu o limite de pedidos. Aguarde um momento e tente novamente.";
+            icone = "bi-hourglass-split";
+            cor = "#f39c12";
+            break;
+        default:
+            titulo = "Erro Interno";
+            mensagem = "Ocorreu um erro inesperado no servidor. Tente novamente mais tarde ou contacte o administrador.";
+            icone = "bi-exclamation-triangle";
+            cor = "#e74c3c";
+            break;
+    }
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@code — SGEEP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        * { font-family: 'Inter', sans-serif; }
 
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
-}
+        body {
+            background: linear-gradient(135deg, #f0f2f5 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+        .error-container {
+            text-align: center;
+            max-width: 520px;
+            padding: 20px;
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, @cor, #1a2a4a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0;
+        }
+
+        .error-icon {
+            font-size: 3.5rem;
+            color: @cor;
+            margin-bottom: 16px;
+            display: inline-block;
+            background: rgba(0,0,0,0.04);
+            width: 90px;
+            height: 90px;
+            line-height: 90px;
+            border-radius: 50%;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a2a4a;
+            margin-bottom: 12px;
+        }
+
+        .error-message {
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .btn-voltar {
+            background: linear-gradient(135deg, #1a2a4a, #1e3a5f);
+            border: none;
+            padding: 12px 32px;
+            font-weight: 600;
+            border-radius: 10px;
+            color: #fff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-voltar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(26,42,74,0.3);
+            color: #fff;
+        }
+
+        .btn-login {
+            background: transparent;
+            border: 2px solid #1a2a4a;
+            padding: 10px 28px;
+            font-weight: 600;
+            border-radius: 10px;
+            color: #1a2a4a;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-login:hover {
+            background: #1a2a4a;
+            color: #fff;
+        }
+
+        .request-id {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 32px;
+        }
+
+        .brand {
+            color: #1a2a4a;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            display: block;
+        }
+
+        .brand span {
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="brand">S<span>GEEP</span></div>
+
+        <div class="error-code">@code</div>
+
+        <div class="mt-3">
+            <i class="bi @icone error-icon"></i>
+        </div>
+
+        <h1 class="error-title">@titulo</h1>
+        <p class="error-message">@mensagem</p>
+
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="/" class="btn-voltar">
+                <i class="bi bi-house"></i> Página Inicial
+            </a>
+            @if (code == 403)
+            {
+                <a href="/Identity/Account/Login" class="btn-login">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sessão
+                </a>
+            }
+            else
+            {
+                <a href="javascript:history.back()" class="btn-login">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            }
+        </div>
+
+        @if (Model.ShowRequestId)
+        {
+            <p class="request-id">
+                ID do pedido: <code>@Model.RequestId</code>
+            </p>
+        }
+    </div>
+</body>
+</html>
