@@ -43,7 +43,7 @@ namespace SGEEP.Web.Services
                       </tr>
                     </table>
                     <p style=""margin:12px 0 0 0;font-size:13px;color:rgba(255,255,255,0.8);letter-spacing:0.3px;line-height:1.4;"">
-                      Sistema de Gestão de Estágios e Empregabilidade Profissional
+                      Sistema de Gestão de Estágios para Escolas Profissionais
                     </p>
                   </td>
                 </tr>
