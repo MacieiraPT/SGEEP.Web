@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-SGEEP (Sistema de Gestão de Estágios e Empregabilidade Profissional) is an internship and professional employability management system built as an ASP.NET Core 8 MVC application with a layered architecture. The UI and domain language is **Portuguese**.
+SGEEP (Sistema de Gestão de Estágios para Escolas Profissionais) is an internship and professional employability management system built as an ASP.NET Core 8 MVC application with a layered architecture. The UI and domain language is **Portuguese**.
 
 ## Architecture
 

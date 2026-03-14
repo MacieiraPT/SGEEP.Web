@@ -30,7 +30,7 @@ namespace SGEEP.Web.Services
             <td style=""background-color:{CorPrimaria};padding:28px 40px;text-align:center;"">
               <span style=""font-size:22px;font-weight:700;color:#ffffff;letter-spacing:1px;"">SGEEP</span>
               <br/>
-              <span style=""font-size:12px;color:#bfdbfe;letter-spacing:0.5px;"">Sistema de Gestão de Estágios e Empregabilidade Profissional</span>
+              <span style=""font-size:12px;color:#bfdbfe;letter-spacing:0.5px;"">Sistema de Gestão de Estágios para Escolas Profissionais</span>
             </td>
           </tr>
 
