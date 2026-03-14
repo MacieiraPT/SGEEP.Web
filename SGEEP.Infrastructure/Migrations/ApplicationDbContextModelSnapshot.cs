@@ -278,6 +278,9 @@ namespace SGEEP.Infrastructure.Migrations
 
                     b.HasIndex("CursoId");
 
+                    b.HasIndex("NIF")
+                        .IsUnique();
+
                     b.ToTable("Alunos");
                 });
 
@@ -481,9 +484,6 @@ namespace SGEEP.Infrastructure.Migrations
                     b.Property<int>("AlunoId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("AlunoId1")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("timestamp without time zone");
 
@@ -516,8 +516,6 @@ namespace SGEEP.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AlunoId");
-
-                    b.HasIndex("AlunoId1");
 
                     b.HasIndex("EmpresaId");
 
@@ -653,6 +651,9 @@ namespace SGEEP.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CursoId");
+
+                    b.HasIndex("NIF")
+                        .IsUnique();
 
                     b.ToTable("Professores");
                 });
@@ -819,14 +820,10 @@ namespace SGEEP.Infrastructure.Migrations
             modelBuilder.Entity("SGEEP.Core.Entities.Estagio", b =>
                 {
                     b.HasOne("SGEEP.Core.Entities.Aluno", "Aluno")
-                        .WithMany()
+                        .WithMany("Estagios")
                         .HasForeignKey("AlunoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("SGEEP.Core.Entities.Aluno", null)
-                        .WithMany("Estagios")
-                        .HasForeignKey("AlunoId1");
 
                     b.HasOne("SGEEP.Core.Entities.Empresa", "Empresa")
                         .WithMany("Estagios")

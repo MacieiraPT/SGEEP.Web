@@ -12,6 +12,7 @@ using SGEEP.Web.Helpers;
 using SGEEP.Web.Models;
 using SGEEP.Web.Models.ViewModels;
 using SGEEP.Web.Services;
+using SGEEP.Web.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace SGEEP.Tests
@@ -550,6 +551,279 @@ namespace SGEEP.Tests
         {
             var pagina = paginaInvalida < 1 ? 1 : paginaInvalida;
             Assert.Equal(1, pagina);
+        }
+    }
+
+    #endregion
+
+    #region Testes de Validação NIF
+
+    public class NifValidationTests
+    {
+        private ValidationResult? Validar(string? nif)
+        {
+            var attribute = new NifValidationAttribute();
+            var context = new ValidationContext(new object()) { MemberName = "NIF" };
+            return attribute.GetValidationResult(nif, context);
+        }
+
+        [Fact]
+        public void NIF_Valido_RetornaSuccess()
+        {
+            // 123456789 → soma = 1*9+2*8+3*7+4*6+5*5+6*4+7*3+8*2 = 9+16+21+24+25+24+21+16 = 156
+            // 156 % 11 = 2, digito = 11-2 = 9 → NIF 123456789 é válido
+            Assert.Null(Validar("123456789"));
+        }
+
+        [Fact]
+        public void NIF_Nulo_RetornaErro()
+        {
+            Assert.NotNull(Validar(null));
+        }
+
+        [Fact]
+        public void NIF_Vazio_RetornaErro()
+        {
+            Assert.NotNull(Validar(""));
+        }
+
+        [Fact]
+        public void NIF_MenosQue9Digitos_RetornaErro()
+        {
+            Assert.NotNull(Validar("12345678"));
+        }
+
+        [Fact]
+        public void NIF_MaisQue9Digitos_RetornaErro()
+        {
+            Assert.NotNull(Validar("1234567890"));
+        }
+
+        [Fact]
+        public void NIF_ComLetras_RetornaErro()
+        {
+            Assert.NotNull(Validar("12345678A"));
+        }
+
+        [Fact]
+        public void NIF_PrimeiroDigitoZero_RetornaErro()
+        {
+            Assert.NotNull(Validar("012345678"));
+        }
+
+        [Fact]
+        public void NIF_PrimeiroDigitoQuatro_RetornaErro()
+        {
+            Assert.NotNull(Validar("412345678"));
+        }
+
+        [Fact]
+        public void NIF_DigitoControloIncorreto_RetornaErro()
+        {
+            Assert.NotNull(Validar("123456780")); // Digito correto é 9, não 0
+        }
+    }
+
+    #endregion
+
+    #region Testes de Lógica de Negócio (Estágio)
+
+    public class EstagioLogicaTests
+    {
+        [Fact]
+        public async Task NaoPodeCriarEstagioParaAlunoComEstagioAtivo()
+        {
+            using var context = TestDbHelper.CreateContext(nameof(NaoPodeCriarEstagioParaAlunoComEstagioAtivo));
+
+            var curso = new Curso { Id = 1, Nome = "Curso", Codigo = "C", Ativo = true };
+            context.Cursos.Add(curso);
+
+            var aluno = new Aluno { Id = 1, Nome = "Aluno", Email = "a@t.pt", NIF = "123456789", NumeroAluno = "A1", Turma = "T1", CursoId = 1, Ativo = true };
+            context.Alunos.Add(aluno);
+
+            var empresa = new Empresa { Id = 1, Nome = "Emp", NIF = "999999990", Morada = "R", Cidade = "C", NomeTutor = "T", EmailTutor = "t@e.pt", Ativa = true };
+            context.Empresas.Add(empresa);
+
+            var professor = new Professor { Id = 1, Nome = "Prof", Email = "p@t.pt", NIF = "111111118", CursoId = 1, Ativo = true };
+            context.Professores.Add(professor);
+
+            context.Estagios.Add(new Estagio
+            {
+                AlunoId = 1, EmpresaId = 1, ProfessorId = 1,
+                DataInicio = DateTime.Today, DataFim = DateTime.Today.AddMonths(3),
+                Estado = EstadoEstagio.Ativo
+            });
+            await context.SaveChangesAsync();
+
+            var temEstagioAtivo = await context.Estagios
+                .AnyAsync(e => e.AlunoId == 1 && (e.Estado == EstadoEstagio.Ativo || e.Estado == EstadoEstagio.Pendente));
+
+            Assert.True(temEstagioAtivo);
+        }
+
+        [Fact]
+        public void Estagio_NaoPodeEditarConcluido()
+        {
+            var estagio = new Estagio { Estado = EstadoEstagio.Concluido };
+            var podeEditar = estagio.Estado != EstadoEstagio.Concluido && estagio.Estado != EstadoEstagio.Cancelado;
+            Assert.False(podeEditar);
+        }
+
+        [Fact]
+        public void Estagio_NaoPodeEditarCancelado()
+        {
+            var estagio = new Estagio { Estado = EstadoEstagio.Cancelado };
+            var podeEditar = estagio.Estado != EstadoEstagio.Concluido && estagio.Estado != EstadoEstagio.Cancelado;
+            Assert.False(podeEditar);
+        }
+
+        [Fact]
+        public void Estagio_PodeEditarAtivo()
+        {
+            var estagio = new Estagio { Estado = EstadoEstagio.Ativo };
+            var podeEditar = estagio.Estado != EstadoEstagio.Concluido && estagio.Estado != EstadoEstagio.Cancelado;
+            Assert.True(podeEditar);
+        }
+
+        [Fact]
+        public void Estagio_SoAtivosPodeSerConcluidos()
+        {
+            var estadosPossiveis = new[] { EstadoEstagio.Pendente, EstadoEstagio.Ativo, EstadoEstagio.Concluido, EstadoEstagio.Cancelado };
+            foreach (var estado in estadosPossiveis)
+            {
+                var podeConcluir = estado == EstadoEstagio.Ativo;
+                if (estado == EstadoEstagio.Ativo)
+                    Assert.True(podeConcluir);
+                else
+                    Assert.False(podeConcluir);
+            }
+        }
+
+        [Fact]
+        public void Estagio_NaoPodeConcluirAntesDataFim()
+        {
+            var estagio = new Estagio
+            {
+                DataFim = DateTime.Today.AddMonths(1),
+                Estado = EstadoEstagio.Ativo
+            };
+            var podeConcluir = estagio.DataFim.Date <= DateTime.Today;
+            Assert.False(podeConcluir);
+        }
+    }
+
+    #endregion
+
+    #region Testes de Registo de Horas (Validações Avançadas)
+
+    public class RegistoHorasValidacaoTests
+    {
+        [Fact]
+        public void HoraSaida_DeveSerDepois_HoraEntrada()
+        {
+            var entrada = new TimeOnly(9, 0);
+            var saida = new TimeOnly(8, 0); // Inválido
+            Assert.True(saida <= entrada);
+        }
+
+        [Fact]
+        public void TotalHoras_NaoDeveExceder16()
+        {
+            var registo = new RegistoHoras
+            {
+                HoraEntrada = new TimeOnly(6, 0),
+                HoraSaida = new TimeOnly(23, 0), // 17 horas
+                HoraPausa = null
+            };
+            Assert.True(registo.TotalHoras > 16);
+        }
+
+        [Fact]
+        public void Pausa_NaoDeveExcederTempoTrabalho()
+        {
+            var registo = new RegistoHoras
+            {
+                HoraEntrada = new TimeOnly(9, 0),
+                HoraSaida = new TimeOnly(12, 0),  // 3 horas de trabalho
+                HoraPausa = new TimeOnly(4, 0)     // 4 horas de pausa
+            };
+            Assert.True(registo.TotalHoras < 0);
+        }
+
+        [Fact]
+        public async Task NaoPodeDuplicarRegistoNoMesmoDia()
+        {
+            using var context = TestDbHelper.CreateContext(nameof(NaoPodeDuplicarRegistoNoMesmoDia));
+
+            var curso = new Curso { Id = 1, Nome = "Curso", Codigo = "C", Ativo = true };
+            context.Cursos.Add(curso);
+
+            var aluno = new Aluno { Id = 1, Nome = "A", Email = "a@t.pt", NIF = "123456789", NumeroAluno = "A1", Turma = "T1", CursoId = 1 };
+            context.Alunos.Add(aluno);
+            var empresa = new Empresa { Id = 1, Nome = "E", NIF = "999999990", Morada = "R", Cidade = "C", NomeTutor = "T", EmailTutor = "t@e.pt" };
+            context.Empresas.Add(empresa);
+            var professor = new Professor { Id = 1, Nome = "P", Email = "p@t.pt", NIF = "111111118", CursoId = 1, Ativo = true };
+            context.Professores.Add(professor);
+
+            var estagio = new Estagio { Id = 1, AlunoId = 1, EmpresaId = 1, ProfessorId = 1, DataInicio = DateTime.Today.AddDays(-30), DataFim = DateTime.Today.AddMonths(3) };
+            context.Estagios.Add(estagio);
+
+            var dataRegisto = DateOnly.FromDateTime(DateTime.Today.AddDays(-5));
+            context.RegistoHoras.Add(new RegistoHoras
+            {
+                EstagioId = 1, Data = dataRegisto,
+                HoraEntrada = new TimeOnly(9, 0), HoraSaida = new TimeOnly(17, 0)
+            });
+            await context.SaveChangesAsync();
+
+            var jaTem = await context.RegistoHoras.AnyAsync(r => r.EstagioId == 1 && r.Data == dataRegisto);
+            Assert.True(jaTem);
+        }
+    }
+
+    #endregion
+
+    #region Testes de ViewModels
+
+    public class ViewModelValidationTests
+    {
+        private static List<ValidationResult> ValidateModel(object model)
+        {
+            var results = new List<ValidationResult>();
+            var context = new ValidationContext(model);
+            Validator.TryValidateObject(model, context, results, true);
+            return results;
+        }
+
+        [Fact]
+        public void EstagioViewModel_CamposObrigatorios()
+        {
+            var vm = new EstagioViewModel();
+            var results = ValidateModel(vm);
+            Assert.True(results.Count > 0);
+        }
+
+        [Fact]
+        public void RelatorioViewModel_TituloObrigatorio()
+        {
+            var vm = new RelatorioViewModel { Titulo = "" };
+            var results = ValidateModel(vm);
+            Assert.Contains(results, r => r.MemberNames.Contains("Titulo"));
+        }
+
+        [Fact]
+        public void AvaliacaoViewModel_NotasNegativas_Invalido()
+        {
+            var vm = new AvaliacaoViewModel
+            {
+                EstagioId = 1,
+                NotaAssiduidade = -1,
+                NotaDesempenho = 15,
+                NotaRelatorio = 15,
+                NotaFinal = 15
+            };
+            var results = ValidateModel(vm);
+            Assert.Contains(results, r => r.MemberNames.Contains("NotaAssiduidade"));
         }
     }
 

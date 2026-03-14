@@ -149,7 +149,24 @@ namespace SGEEP.Web.Controllers
             };
 
             _context.Relatorios.Add(relatorio);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                // Rollback: apagar ficheiro órfão se o SaveChanges falhar
+                if (ficheiroPath != null)
+                {
+                    var caminhoFisico = Path.Combine(_environment.WebRootPath,
+                        ficheiroPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                    if (System.IO.File.Exists(caminhoFisico))
+                        System.IO.File.Delete(caminhoFisico);
+                }
+                TempData["Erro"] = "Ocorreu um erro ao guardar o relatório. Tente novamente.";
+                return View(vm);
+            }
 
             await _auditoria.RegistarAsync("Criar", "Relatorio", relatorio.Id, $"Relatório '{relatorio.Titulo}' submetido (Estágio #{relatorio.EstagioId})");
 

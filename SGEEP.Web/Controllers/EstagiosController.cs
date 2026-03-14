@@ -143,6 +143,23 @@ namespace SGEEP.Web.Controllers
                 return View(vm);
             }
 
+            // Verificar se aluno e empresa estão ativos
+            var alunoAtivo = await _context.Alunos.AnyAsync(a => a.Id == vm.AlunoId && a.Ativo);
+            if (!alunoAtivo)
+            {
+                ModelState.AddModelError("AlunoId", "O aluno selecionado não está ativo.");
+                await PopularDropdowns(vm);
+                return View(vm);
+            }
+
+            var empresaAtiva = await _context.Empresas.AnyAsync(e => e.Id == vm.EmpresaId && e.Ativa);
+            if (!empresaAtiva)
+            {
+                ModelState.AddModelError("EmpresaId", "A empresa selecionada não está ativa.");
+                await PopularDropdowns(vm);
+                return View(vm);
+            }
+
             var estagio = new Estagio
             {
                 AlunoId = vm.AlunoId,
@@ -392,6 +409,13 @@ namespace SGEEP.Web.Controllers
             {
                 TempData["Erro"] = "Apenas estágios ativos podem ser concluídos.";
                 return RedirectToAction(nameof(Index));
+            }
+
+            // Verificar se a data de fim do estágio já passou
+            if (estagio.DataFim.Date > DateTime.Today)
+            {
+                TempData["Erro"] = $"Não é possível concluir o estágio antes da data de fim ({estagio.DataFim:dd/MM/yyyy}).";
+                return RedirectToAction(nameof(Details), new { id });
             }
 
             // Verificar horas mínimas validadas
