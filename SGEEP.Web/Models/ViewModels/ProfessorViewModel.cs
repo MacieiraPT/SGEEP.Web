@@ -27,8 +27,8 @@ namespace SGEEP.Web.Models.ViewModels
         [Display(Name = "NIF")]
         public string NIF { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "O curso é obrigatório")]
-        [Display(Name = "Curso que Dirige")]
+        [Required(ErrorMessage = "A área é obrigatória")]
+        [Display(Name = "Área")]
         public int CursoId { get; set; }
 
         [Display(Name = "Ativo")]

@@ -9,7 +9,7 @@
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
-                        <i class="bi bi-person-plus"></i> Novo Professor — Diretor de Curso
+                        <i class="bi bi-person-plus"></i> Novo Professor
                     </h5>
                 </div>
                 <div class="card-body">
@@ -44,7 +44,7 @@
                                 <label asp-for="CursoId" class="form-label"></label>
                                 <select asp-for="CursoId" asp-items="Model.Cursos"
                                         class="form-select">
-                                    <option value="">-- Seleciona o curso que dirige --</option>
+                                    <option value="">-- Seleciona a área --</option>
                                 </select>
                                 <span asp-validation-for="CursoId" class="text-danger small"></span>
                             </div>

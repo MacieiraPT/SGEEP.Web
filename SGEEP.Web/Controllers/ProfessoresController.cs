@@ -103,6 +103,13 @@ namespace SGEEP.Web.Controllers
                 return View(vm);
             }
 
+            if (vm.DiretorCurso && await _context.Professores.AnyAsync(p => p.CursoId == vm.CursoId && p.DiretorCurso && p.Ativo))
+            {
+                ModelState.AddModelError("DiretorCurso", "Já existe um Diretor de Curso ativo para esta área.");
+                vm.Cursos = await GetCursosSelectList();
+                return View(vm);
+            }
+
             // Criar conta Identity com password temporária aleatória
             var user = new IdentityUser
             {
@@ -199,6 +206,13 @@ namespace SGEEP.Web.Controllers
             if (await _context.Professores.AnyAsync(p => p.NIF == vm.NIF && p.Id != id))
             {
                 ModelState.AddModelError("NIF", "Já existe um professor com este NIF.");
+                vm.Cursos = await GetCursosSelectList();
+                return View(vm);
+            }
+
+            if (vm.DiretorCurso && await _context.Professores.AnyAsync(p => p.CursoId == vm.CursoId && p.DiretorCurso && p.Ativo && p.Id != id))
+            {
+                ModelState.AddModelError("DiretorCurso", "Já existe um Diretor de Curso ativo para esta área.");
                 vm.Cursos = await GetCursosSelectList();
                 return View(vm);
             }
