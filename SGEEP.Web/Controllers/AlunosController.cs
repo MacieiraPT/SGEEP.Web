@@ -54,6 +54,7 @@ namespace SGEEP.Web.Controllers
 
                 query = query.Where(a => a.CursoId == professor.CursoId);
                 ViewBag.CursoFixo = true;
+                ViewBag.EhDiretorCurso = professor.DiretorCurso;
             }
 
             if (!string.IsNullOrEmpty(pesquisa))
@@ -107,6 +108,11 @@ namespace SGEEP.Web.Controllers
             {
                 var professor = await ObterProfessorAtual();
                 if (professor == null) return Forbid();
+                if (!professor.DiretorCurso)
+                {
+                    TempData["Erro"] = "Apenas Diretores de Curso podem adicionar alunos.";
+                    return RedirectToAction(nameof(Index));
+                }
                 vm.CursoId = professor.CursoId;
                 ViewBag.CursoFixo = true;
             }
@@ -125,6 +131,11 @@ namespace SGEEP.Web.Controllers
             {
                 var professor = await ObterProfessorAtual();
                 if (professor == null) return Forbid();
+                if (!professor.DiretorCurso)
+                {
+                    TempData["Erro"] = "Apenas Diretores de Curso podem adicionar alunos.";
+                    return RedirectToAction(nameof(Index));
+                }
                 vm.CursoId = professor.CursoId;
                 ViewBag.CursoFixo = true;
             }
@@ -217,11 +228,16 @@ namespace SGEEP.Web.Controllers
             var aluno = await _context.Alunos.FindAsync(id);
             if (aluno == null) return NotFound();
 
-            // Professor só pode editar alunos do seu curso
+            // Professor só pode editar alunos do seu curso; apenas DC pode editar
             if (User.IsInRole("Professor"))
             {
                 var professor = await ObterProfessorAtual();
                 if (professor == null || aluno.CursoId != professor.CursoId) return Forbid();
+                if (!professor.DiretorCurso)
+                {
+                    TempData["Erro"] = "Apenas Diretores de Curso podem editar alunos.";
+                    return RedirectToAction(nameof(Index));
+                }
                 ViewBag.CursoFixo = true;
             }
 
@@ -248,11 +264,16 @@ namespace SGEEP.Web.Controllers
             var aluno = await _context.Alunos.FindAsync(id);
             if (aluno == null) return NotFound();
 
-            // Professor só pode editar alunos do seu curso
+            // Professor só pode editar alunos do seu curso; apenas DC pode editar
             if (User.IsInRole("Professor"))
             {
                 var professor = await ObterProfessorAtual();
                 if (professor == null || aluno.CursoId != professor.CursoId) return Forbid();
+                if (!professor.DiretorCurso)
+                {
+                    TempData["Erro"] = "Apenas Diretores de Curso podem editar alunos.";
+                    return RedirectToAction(nameof(Index));
+                }
                 vm.CursoId = professor.CursoId;
                 ViewBag.CursoFixo = true;
             }
@@ -303,11 +324,16 @@ namespace SGEEP.Web.Controllers
 
             if (aluno == null) return NotFound();
 
-            // Professor só pode desativar alunos do seu curso
+            // Professor só pode desativar alunos do seu curso; apenas DC pode desativar
             if (User.IsInRole("Professor"))
             {
                 var professor = await ObterProfessorAtual();
                 if (professor == null || aluno.CursoId != professor.CursoId) return Forbid();
+                if (!professor.DiretorCurso)
+                {
+                    TempData["Erro"] = "Apenas Diretores de Curso podem desativar alunos.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
             if (aluno.Estagios.Any(e => e.Estado == SGEEP.Core.Enums.EstadoEstagio.Ativo))

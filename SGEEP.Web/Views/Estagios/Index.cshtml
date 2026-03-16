@@ -115,34 +115,37 @@
                                        class="btn btn-sm btn-outline-info" title="Ver">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    @if (estagio.Estado == EstadoEstagio.Pendente)
+                                    @if (User.IsInRole("Administrador") || ViewBag.EhDiretorCurso == true)
                                     {
-                                        <a asp-action="Edit" asp-route-id="@estagio.Id"
-                                           class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-success"
-                                                title="Ativar"
-                                                onclick="confirmarAtivar(@estagio.Id, '@estagio.Aluno?.Nome')">
-                                            <i class="bi bi-play-fill"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                                title="Cancelar"
-                                                onclick="confirmarCancelar(@estagio.Id, '@estagio.Aluno?.Nome')">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    }
-                                    @if (estagio.Estado == EstadoEstagio.Ativo)
-                                    {
-                                        <a asp-action="Concluir" asp-route-id="@estagio.Id"
-                                           class="btn btn-sm btn-outline-primary" title="Concluir e Avaliar">
-                                            <i class="bi bi-check2-all"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                                title="Cancelar"
-                                                onclick="confirmarCancelar(@estagio.Id, '@estagio.Aluno?.Nome')">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
+                                        @if (estagio.Estado == EstadoEstagio.Pendente)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@estagio.Id"
+                                               class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                    title="Ativar"
+                                                    onclick="confirmarAtivar(@estagio.Id, '@estagio.Aluno?.Nome')">
+                                                <i class="bi bi-play-fill"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    title="Cancelar"
+                                                    onclick="confirmarCancelar(@estagio.Id, '@estagio.Aluno?.Nome')">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        }
+                                        @if (estagio.Estado == EstadoEstagio.Ativo)
+                                        {
+                                            <a asp-action="Concluir" asp-route-id="@estagio.Id"
+                                               class="btn btn-sm btn-outline-primary" title="Concluir e Avaliar">
+                                                <i class="bi bi-check2-all"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    title="Cancelar"
+                                                    onclick="confirmarCancelar(@estagio.Id, '@estagio.Aluno?.Nome')">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        }
                                     }
                                 </td>
                             </tr>
