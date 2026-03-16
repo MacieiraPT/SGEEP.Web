@@ -220,7 +220,7 @@ namespace SGEEP.Web.Controllers
             var estagio = await _context.Estagios.FindAsync(id);
             if (estagio == null) return NotFound();
 
-            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+            if (!await ProfessorDCTemAcesso(estagio.AlunoId))
                 return Forbid();
 
             // Não permitir editar estágios concluídos ou cancelados
@@ -263,7 +263,7 @@ namespace SGEEP.Web.Controllers
             var estagio = await _context.Estagios.FindAsync(id);
             if (estagio == null) return NotFound();
 
-            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+            if (!await ProfessorDCTemAcesso(estagio.AlunoId))
                 return Forbid();
 
             if (vm.DataFim <= vm.DataInicio)
@@ -322,7 +322,7 @@ namespace SGEEP.Web.Controllers
                 .FirstOrDefaultAsync(e => e.Id == id);
             if (estagio == null) return NotFound();
 
-            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+            if (!await ProfessorDCTemAcesso(estagio.AlunoId))
                 return Forbid();
 
             if (estagio.Estado != EstadoEstagio.Pendente)
@@ -377,7 +377,7 @@ namespace SGEEP.Web.Controllers
 
             if (estagio == null) return NotFound();
 
-            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+            if (!await ProfessorDCTemAcesso(estagio.AlunoId))
                 return Forbid();
 
             if (estagio.Estado == EstadoEstagio.Concluido)
@@ -405,7 +405,7 @@ namespace SGEEP.Web.Controllers
 
             if (estagio == null) return NotFound();
 
-            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+            if (!await ProfessorDCTemAcesso(estagio.AlunoId))
                 return Forbid();
 
             if (estagio.Estado != EstadoEstagio.Ativo)
@@ -436,7 +436,7 @@ namespace SGEEP.Web.Controllers
 
             if (estagio == null) return NotFound();
 
-            if (!await ProfessorTemAcesso(estagio.ProfessorId))
+            if (!await ProfessorDCTemAcesso(estagio.AlunoId))
                 return Forbid();
 
             if (estagio.Estado != EstadoEstagio.Ativo)
@@ -526,6 +526,18 @@ namespace SGEEP.Web.Controllers
             var professor = await _context.Professores
                 .FirstOrDefaultAsync(p => p.Email == userEmail);
             return professor?.Id == professorIdDoEstagio;
+        }
+
+        // Acesso a mutações (Edit/Ativar/Cancelar/Concluir): apenas DC do mesmo curso
+        private async Task<bool> ProfessorDCTemAcesso(int estagioAlunoId)
+        {
+            if (!User.IsInRole("Professor")) return true;
+            var userEmail = User.Identity!.Name;
+            var professor = await _context.Professores
+                .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo);
+            if (professor == null || !professor.DiretorCurso) return false;
+            var aluno = await _context.Alunos.FindAsync(estagioAlunoId);
+            return aluno?.CursoId == professor.CursoId;
         }
 
         private async Task<Professor?> ObterProfessorDC()

@@ -10,9 +10,12 @@
             <a asp-controller="Export" asp-action="AlunosExcel" class="btn btn-success">
                 <i class="bi bi-file-earmark-excel"></i> Excel
             </a>
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-person-plus"></i> Novo Aluno
-            </a>
+            @if (User.IsInRole("Administrador") || ViewBag.EhDiretorCurso == true)
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Novo Aluno
+                </a>
+            }
         </div>
     </div>
 
@@ -37,20 +40,23 @@
             <form method="get" class="d-flex gap-2 flex-wrap">
                 <input type="text" name="pesquisa" value="@ViewBag.Pesquisa"
                        class="form-control w-auto" placeholder="Pesquisar...">
-                <select name="cursoId" class="form-select w-auto">
-                    <option value="">Todos os cursos</option>
-                    @foreach (var curso in ViewBag.Cursos)
-                    {
-                        if (ViewBag.CursoId?.ToString() == curso.Value)
+                @if (ViewBag.CursoFixo != true)
+                {
+                    <select name="cursoId" class="form-select w-auto">
+                        <option value="">Todos os cursos</option>
+                        @foreach (var curso in ViewBag.Cursos)
                         {
-                            <option value="@curso.Value" selected>@curso.Text</option>
+                            if (ViewBag.CursoId?.ToString() == curso.Value)
+                            {
+                                <option value="@curso.Value" selected>@curso.Text</option>
+                            }
+                            else
+                            {
+                                <option value="@curso.Value">@curso.Text</option>
+                            }
                         }
-                        else
-                        {
-                            <option value="@curso.Value">@curso.Text</option>
-                        }
-                    }
-                </select>
+                    </select>
+                }
                 <button type="submit" class="btn btn-outline-primary">
                     <i class="bi bi-search"></i>
                 </button>
@@ -100,15 +106,18 @@
                                        class="btn btn-sm btn-outline-info" title="Ver">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@aluno.Id"
-                                       class="btn btn-sm btn-outline-warning" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                            title="Desativar"
-                                            onclick="confirmarDelete(@aluno.Id, '@aluno.Nome')">
-                                        <i class="bi bi-person-x"></i>
-                                    </button>
+                                    @if (User.IsInRole("Administrador") || ViewBag.EhDiretorCurso == true)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@aluno.Id"
+                                           class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                title="Desativar"
+                                                onclick="confirmarDelete(@aluno.Id, '@aluno.Nome')">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    }
                                 </td>
                             </tr>
                         }
