@@ -34,6 +34,9 @@ namespace SGEEP.Web.Models.ViewModels
         [Display(Name = "Ativo")]
         public bool Ativo { get; set; } = true;
 
+        [Display(Name = "Diretor de Curso")]
+        public bool DiretorCurso { get; set; }
+
         public IEnumerable<SelectListItem> Cursos { get; set; } = new List<SelectListItem>();
     }
 }

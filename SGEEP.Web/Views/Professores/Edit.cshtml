@@ -45,7 +45,13 @@
                                 </select>
                                 <span asp-validation-for="CursoId" class="text-danger small"></span>
                             </div>
-                            <div class="col-12">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="DiretorCurso" class="form-check-input" />
+                                    <label asp-for="DiretorCurso" class="form-check-label">Diretor de Curso</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="form-check form-switch">
                                     <input asp-for="Ativo" class="form-check-input" />
                                     <label asp-for="Ativo" class="form-check-label">Professor Ativo</label>

@@ -32,14 +32,7 @@
                                 </select>
                                 <span asp-validation-for="EmpresaId" class="text-danger small"></span>
                             </div>
-                            <div class="col-12">
-                                <label asp-for="ProfessorId" class="form-label"></label>
-                                <select asp-for="ProfessorId" asp-items="Model.Professores"
-                                        class="form-select">
-                                    <option value="">-- Seleciona o professor --</option>
-                                </select>
-                                <span asp-validation-for="ProfessorId" class="text-danger small"></span>
-                            </div>
+                            <input type="hidden" asp-for="ProfessorId" />
                             <div class="col-md-6">
                                 <label asp-for="DataInicio" class="form-label"></label>
                                 <input asp-for="DataInicio" class="form-control" type="date" />

@@ -20,6 +20,8 @@ namespace SGEEP.Core.Entities
 
         public bool Ativo { get; set; } = true;
 
+        public bool DiretorCurso { get; set; } = false;
+
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
         // Relações

@@ -60,7 +60,6 @@ namespace SGEEP.Web.Controllers
         }
 
         // GET: Empresas/Create
-        [Authorize(Roles = "Administrador")]
         public IActionResult Create()
         {
             return View(new EmpresaViewModel());
@@ -69,7 +68,6 @@ namespace SGEEP.Web.Controllers
         // POST: Empresas/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Create(EmpresaViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);

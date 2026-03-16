@@ -73,13 +73,20 @@ namespace SGEEP.Web.Controllers
         }
 
         // GET: Account/ResetPassword?userId=xxx
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Administrador,Professor")]
         public async Task<IActionResult> ResetPassword(string userId)
         {
             if (string.IsNullOrEmpty(userId)) return BadRequest();
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
+
+            // Professor DC só pode repor password de alunos do seu curso
+            if (User.IsInRole("Professor"))
+            {
+                if (!await ProfessorDCPodeReporPassword(userId))
+                    return Forbid();
+            }
 
             ViewBag.TargetEmail = user.Email;
             ViewBag.TargetUserId = userId;
@@ -89,13 +96,20 @@ namespace SGEEP.Web.Controllers
         // POST: Account/ResetPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Administrador,Professor")]
         public async Task<IActionResult> ResetPassword(string userId, string dummy)
         {
             if (string.IsNullOrEmpty(userId)) return BadRequest();
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
+
+            // Professor DC só pode repor password de alunos do seu curso
+            if (User.IsInRole("Professor"))
+            {
+                if (!await ProfessorDCPodeReporPassword(userId))
+                    return Forbid();
+            }
 
             // Generate new random password
             var novaPassword = GerarPasswordTemporaria();
@@ -124,7 +138,8 @@ namespace SGEEP.Web.Controllers
                 await _userManager.ResetAccessFailedCountAsync(user);
             }
 
-            await _auditoria.RegistarAsync("ResetPassword", "Utilizador", null, $"Password do utilizador '{user.Email}' foi reposta pelo administrador");
+            var resetPor = User.IsInRole("Administrador") ? "administrador" : "diretor de curso";
+            await _auditoria.RegistarAsync("ResetPassword", "Utilizador", null, $"Password do utilizador '{user.Email}' foi reposta pelo {resetPor}");
 
             // Enviar email com nova password
             if (!string.IsNullOrEmpty(user.Email))
@@ -152,6 +167,21 @@ namespace SGEEP.Web.Controllers
             var lista = await users.OrderBy(u => u.Email).Take(50).ToListAsync();
             ViewBag.Pesquisa = pesquisa;
             return View(lista);
+        }
+
+        private async Task<bool> ProfessorDCPodeReporPassword(string targetUserId)
+        {
+            var userEmail = User.Identity!.Name;
+            var professor = await _context.Professores
+                .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo && p.DiretorCurso);
+
+            if (professor == null) return false;
+
+            // Verificar que o utilizador alvo é um aluno do curso do DC
+            var aluno = await _context.Alunos
+                .FirstOrDefaultAsync(a => a.ApplicationUserId == targetUserId);
+
+            return aluno != null && aluno.CursoId == professor.CursoId;
         }
 
         private static string GerarPasswordTemporaria()

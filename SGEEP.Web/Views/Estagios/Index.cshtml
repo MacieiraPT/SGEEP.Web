@@ -14,9 +14,12 @@
             <a asp-controller="Export" asp-action="EstagiosPdf" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> Novo Estágio
-            </a>
+            @if (User.IsInRole("Professor") && ViewBag.EhDiretorCurso == true)
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Novo Estágio
+                </a>
+            }
         </div>
     </div>
 

@@ -60,6 +60,13 @@ namespace SGEEP.Web.Controllers
             if (estado.HasValue)
                 query = query.Where(e => e.Estado == estado);
 
+            // Para mostrar/esconder botão "Novo Estágio" na view
+            if (User.IsInRole("Professor"))
+            {
+                var dc = await ObterProfessorDC();
+                ViewBag.EhDiretorCurso = dc != null;
+            }
+
             ViewBag.Pesquisa = pesquisa;
             ViewBag.Estado = estado;
             ViewBag.Estados = new SelectList(
@@ -100,12 +107,21 @@ namespace SGEEP.Web.Controllers
         }
 
         // GET: Estagios/Create
+        [Authorize(Roles = "Professor")]
         public async Task<IActionResult> Create()
         {
+            var professor = await ObterProfessorDC();
+            if (professor == null)
+            {
+                TempData["Erro"] = "Apenas Diretores de Curso podem criar estágios.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var vm = new EstagioViewModel
             {
                 DataInicio = DateTime.Today,
-                DataFim = DateTime.Today.AddMonths(3)
+                DataFim = DateTime.Today.AddMonths(3),
+                ProfessorId = professor.Id
             };
 
             await PopularDropdowns(vm);
@@ -115,8 +131,19 @@ namespace SGEEP.Web.Controllers
         // POST: Estagios/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Professor")]
         public async Task<IActionResult> Create(EstagioViewModel vm)
         {
+            var professor = await ObterProfessorDC();
+            if (professor == null)
+            {
+                TempData["Erro"] = "Apenas Diretores de Curso podem criar estágios.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Forçar ProfessorId do DC
+            vm.ProfessorId = professor.Id;
+
             if (!ModelState.IsValid)
             {
                 await PopularDropdowns(vm);
@@ -127,6 +154,22 @@ namespace SGEEP.Web.Controllers
             if (vm.DataFim <= vm.DataInicio)
             {
                 ModelState.AddModelError("DataFim", "A data de fim deve ser posterior à data de início.");
+                await PopularDropdowns(vm);
+                return View(vm);
+            }
+
+            // Validar que o aluno pertence ao curso do DC
+            var aluno = await _context.Alunos.FirstOrDefaultAsync(a => a.Id == vm.AlunoId && a.Ativo);
+            if (aluno == null)
+            {
+                ModelState.AddModelError("AlunoId", "O aluno selecionado não está ativo.");
+                await PopularDropdowns(vm);
+                return View(vm);
+            }
+
+            if (aluno.CursoId != professor.CursoId)
+            {
+                ModelState.AddModelError("AlunoId", "O aluno não pertence ao seu curso.");
                 await PopularDropdowns(vm);
                 return View(vm);
             }
@@ -143,15 +186,6 @@ namespace SGEEP.Web.Controllers
                 return View(vm);
             }
 
-            // Verificar se aluno e empresa estão ativos
-            var alunoAtivo = await _context.Alunos.AnyAsync(a => a.Id == vm.AlunoId && a.Ativo);
-            if (!alunoAtivo)
-            {
-                ModelState.AddModelError("AlunoId", "O aluno selecionado não está ativo.");
-                await PopularDropdowns(vm);
-                return View(vm);
-            }
-
             var empresaAtiva = await _context.Empresas.AnyAsync(e => e.Id == vm.EmpresaId && e.Ativa);
             if (!empresaAtiva)
             {
@@ -164,7 +198,7 @@ namespace SGEEP.Web.Controllers
             {
                 AlunoId = vm.AlunoId,
                 EmpresaId = vm.EmpresaId,
-                ProfessorId = vm.ProfessorId,
+                ProfessorId = professor.Id,
                 DataInicio = vm.DataInicio,
                 DataFim = vm.DataFim,
                 LocalEstagio = vm.LocalEstagio,
@@ -492,6 +526,14 @@ namespace SGEEP.Web.Controllers
             var professor = await _context.Professores
                 .FirstOrDefaultAsync(p => p.Email == userEmail);
             return professor?.Id == professorIdDoEstagio;
+        }
+
+        private async Task<Professor?> ObterProfessorDC()
+        {
+            if (!User.IsInRole("Professor")) return null;
+            var userEmail = User.Identity!.Name;
+            return await _context.Professores
+                .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo && p.DiretorCurso);
         }
 
         private async Task PopularDropdowns(EstagioViewModel vm)

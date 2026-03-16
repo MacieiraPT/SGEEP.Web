@@ -65,6 +65,15 @@
                     <a asp-action="Index" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
+                    @if (!string.IsNullOrEmpty(Model.ApplicationUserId) &&
+                         (User.IsInRole("Administrador") || ViewBag.EhDiretorCurso == true))
+                    {
+                        <a asp-controller="Account" asp-action="ResetPassword"
+                           asp-route-userId="@Model.ApplicationUserId"
+                           class="btn btn-outline-danger">
+                            <i class="bi bi-key"></i> Repor Password
+                        </a>
+                    }
                     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
                         <i class="bi bi-pencil"></i> Editar
                     </a>

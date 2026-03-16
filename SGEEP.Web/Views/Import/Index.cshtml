@@ -1,0 +1,103 @@
+@{
+    ViewData["Title"] = "Importar Dados";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4"><i class="bi bi-upload"></i> Importar Dados</h2>
+
+            @if (TempData["Sucesso"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="bi bi-check-circle"></i> @TempData["Sucesso"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Erro"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="bi bi-exclamation-triangle"></i> @TempData["Erro"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-up"></i> Upload de Ficheiro</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Importar" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Importação</label>
+                                <select name="TipoImportacao" class="form-select" required>
+                                    <option value="">-- Selecione o tipo --</option>
+                                    <option value="Professores">Professores</option>
+                                    <option value="Alunos">Alunos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ficheiro (XLSX ou CSV)</label>
+                                <input type="file" name="Ficheiro" class="form-control"
+                                       accept=".xlsx,.csv" required />
+                            </div>
+                        </div>
+                        <hr />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Importar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-download"></i> Templates</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Descarregue os templates para preencher os dados corretamente.</p>
+                    <div class="d-flex gap-2">
+                        <a asp-action="DescarregarTemplate" asp-route-tipo="Professores"
+                           class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-excel"></i> Template Professores
+                        </a>
+                        <a asp-action="DescarregarTemplate" asp-route-tipo="Alunos"
+                           class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-excel"></i> Template Alunos
+                        </a>
+                    </div>
+
+                    <hr />
+                    <h6>Colunas esperadas:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Professores:</strong>
+                            <ol class="small text-muted">
+                                <li>Nome</li>
+                                <li>Email</li>
+                                <li>Telefone</li>
+                                <li>NIF</li>
+                                <li>CodigoCurso (ex: PRG, TAV, TD...)</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Alunos:</strong>
+                            <ol class="small text-muted">
+                                <li>Nome</li>
+                                <li>Email</li>
+                                <li>Telefone</li>
+                                <li>NIF</li>
+                                <li>NumeroAluno</li>
+                                <li>Turma</li>
+                                <li>CodigoCurso (ex: PRG, TAV, TD...)</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
