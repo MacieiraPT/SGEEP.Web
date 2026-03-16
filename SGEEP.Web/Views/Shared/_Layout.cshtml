@@ -285,8 +285,7 @@
                         }
                         else if (User.IsInRole("Professor"))
                         {
-
-                            <text>Diretor de Curso</text>
+                            <text>Professor</text>
                         }
                         else if (User.IsInRole("Aluno"))
                         {
@@ -350,6 +349,18 @@
                         <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Professores" ? "active" : "")"
                            asp-controller="Professores" asp-action="Index">
                             <i class="bi bi-person-workspace"></i> Professores
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Cursos" ? "active" : "")"
+                           asp-controller="Cursos" asp-action="Index">
+                            <i class="bi bi-book"></i> Cursos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Import" ? "active" : "")"
+                           asp-controller="Import" asp-action="Index">
+                            <i class="bi bi-upload"></i> Importar Dados
                         </a>
                     </li>
                     <li class="nav-item">

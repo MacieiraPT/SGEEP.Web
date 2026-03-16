@@ -46,13 +46,25 @@
                                        placeholder="9XXXXXXXX" />
                                 <span asp-validation-for="Telefone" class="text-danger small"></span>
                             </div>
-                            <div class="col-md-8">
-                                <label asp-for="CursoId" class="form-label"></label>
-                                <select asp-for="CursoId" asp-items="Model.Cursos" class="form-select">
-                                    <option value="">-- Seleciona um curso --</option>
-                                </select>
-                                <span asp-validation-for="CursoId" class="text-danger small"></span>
-                            </div>
+                            @if (ViewBag.CursoFixo == true)
+                            {
+                                <input type="hidden" asp-for="CursoId" />
+                                <div class="col-md-8">
+                                    <label class="form-label">Curso</label>
+                                    <input class="form-control" disabled
+                                           value="@(Model.Cursos.FirstOrDefault(c => c.Value == Model.CursoId.ToString())?.Text ?? "Curso do Professor")" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="col-md-8">
+                                    <label asp-for="CursoId" class="form-label"></label>
+                                    <select asp-for="CursoId" asp-items="Model.Cursos" class="form-select">
+                                        <option value="">-- Seleciona um curso --</option>
+                                    </select>
+                                    <span asp-validation-for="CursoId" class="text-danger small"></span>
+                                </div>
+                            }
                             <div class="col-md-4">
                                 <label asp-for="Turma" class="form-label"></label>
                                 <input asp-for="Turma" class="form-control"

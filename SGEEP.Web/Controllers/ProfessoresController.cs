@@ -131,6 +131,7 @@ namespace SGEEP.Web.Controllers
                 Telefone = vm.Telefone,
                 NIF = vm.NIF,
                 CursoId = vm.CursoId,
+                DiretorCurso = vm.DiretorCurso,
                 ApplicationUserId = user.Id,
                 Ativo = true
             };
@@ -168,6 +169,7 @@ namespace SGEEP.Web.Controllers
                 Telefone = professor.Telefone,
                 NIF = professor.NIF,
                 CursoId = professor.CursoId,
+                DiretorCurso = professor.DiretorCurso,
                 Ativo = professor.Ativo,
                 Cursos = await GetCursosSelectList()
             });
@@ -206,6 +208,7 @@ namespace SGEEP.Web.Controllers
             professor.Telefone = vm.Telefone;
             professor.NIF = vm.NIF;
             professor.CursoId = vm.CursoId;
+            professor.DiretorCurso = vm.DiretorCurso;
             professor.Ativo = vm.Ativo;
 
             await _context.SaveChangesAsync();

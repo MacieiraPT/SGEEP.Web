@@ -87,33 +87,48 @@ namespace SGEEP.Web.Controllers
             // Professor só pode ver alunos do seu curso
             if (User.IsInRole("Professor"))
             {
-                var userEmail = User.Identity!.Name;
-                var professor = await _context.Professores
-                    .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo);
+                var professor = await ObterProfessorAtual();
 
                 if (professor == null || aluno.CursoId != professor.CursoId)
                     return Forbid();
+
+                ViewBag.EhDiretorCurso = professor.DiretorCurso;
             }
 
             return View(aluno);
         }
 
         // GET: Alunos/Create
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Create()
         {
-            return View(new AlunoViewModel
+            var vm = new AlunoViewModel();
+
+            if (User.IsInRole("Professor"))
             {
-                Cursos = await GetCursosSelectList()
-            });
+                var professor = await ObterProfessorAtual();
+                if (professor == null) return Forbid();
+                vm.CursoId = professor.CursoId;
+                ViewBag.CursoFixo = true;
+            }
+
+            vm.Cursos = await GetCursosSelectList();
+            return View(vm);
         }
 
         // POST: Alunos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Create(AlunoViewModel vm)
         {
+            // Se professor, forçar CursoId do professor
+            if (User.IsInRole("Professor"))
+            {
+                var professor = await ObterProfessorAtual();
+                if (professor == null) return Forbid();
+                vm.CursoId = professor.CursoId;
+                ViewBag.CursoFixo = true;
+            }
+
             if (!ModelState.IsValid)
             {
                 vm.Cursos = await GetCursosSelectList();
@@ -197,11 +212,18 @@ namespace SGEEP.Web.Controllers
         }
 
         // GET: Alunos/Edit/5
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(int id)
         {
             var aluno = await _context.Alunos.FindAsync(id);
             if (aluno == null) return NotFound();
+
+            // Professor só pode editar alunos do seu curso
+            if (User.IsInRole("Professor"))
+            {
+                var professor = await ObterProfessorAtual();
+                if (professor == null || aluno.CursoId != professor.CursoId) return Forbid();
+                ViewBag.CursoFixo = true;
+            }
 
             return View(new AlunoViewModel
             {
@@ -221,17 +243,25 @@ namespace SGEEP.Web.Controllers
         // POST: Alunos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(int id, AlunoViewModel vm)
         {
+            var aluno = await _context.Alunos.FindAsync(id);
+            if (aluno == null) return NotFound();
+
+            // Professor só pode editar alunos do seu curso
+            if (User.IsInRole("Professor"))
+            {
+                var professor = await ObterProfessorAtual();
+                if (professor == null || aluno.CursoId != professor.CursoId) return Forbid();
+                vm.CursoId = professor.CursoId;
+                ViewBag.CursoFixo = true;
+            }
+
             if (!ModelState.IsValid)
             {
                 vm.Cursos = await GetCursosSelectList();
                 return View(vm);
             }
-
-            var aluno = await _context.Alunos.FindAsync(id);
-            if (aluno == null) return NotFound();
 
             if (await _context.Alunos.AnyAsync(a => a.NumeroAluno == vm.NumeroAluno && a.Id != id))
             {
@@ -265,7 +295,6 @@ namespace SGEEP.Web.Controllers
         // POST: Alunos/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var aluno = await _context.Alunos
@@ -273,6 +302,13 @@ namespace SGEEP.Web.Controllers
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (aluno == null) return NotFound();
+
+            // Professor só pode desativar alunos do seu curso
+            if (User.IsInRole("Professor"))
+            {
+                var professor = await ObterProfessorAtual();
+                if (professor == null || aluno.CursoId != professor.CursoId) return Forbid();
+            }
 
             if (aluno.Estagios.Any(e => e.Estado == SGEEP.Core.Enums.EstadoEstagio.Ativo))
             {
@@ -337,6 +373,14 @@ namespace SGEEP.Web.Controllers
                     Text = c.Nome
                 })
                 .ToListAsync();
+        }
+
+        private async Task<Professor?> ObterProfessorAtual()
+        {
+            if (!User.IsInRole("Professor")) return null;
+            var userEmail = User.Identity!.Name;
+            return await _context.Professores
+                .FirstOrDefaultAsync(p => p.Email == userEmail && p.Ativo);
         }
     }
 }
