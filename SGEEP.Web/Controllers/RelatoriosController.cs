@@ -15,22 +15,22 @@ namespace SGEEP.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly IWebHostEnvironment _environment;
         private readonly AuditoriaService _auditoria;
         private readonly IEmailService _emailService;
+        private readonly IFicheiroStorageService _storage;
 
         public RelatoriosController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
-            IWebHostEnvironment environment,
             AuditoriaService auditoria,
-            IEmailService emailService)
+            IEmailService emailService,
+            IFicheiroStorageService storage)
         {
             _context = context;
             _userManager = userManager;
-            _environment = environment;
             _auditoria = auditoria;
             _emailService = emailService;
+            _storage = storage;
         }
 
         // GET: Relatorios/Index/5 (por estágio)
@@ -126,16 +126,15 @@ namespace SGEEP.Web.Controllers
                     }
                 }
 
-                // Guardar ficheiro
+                // Guardar ficheiro no Supabase Storage
                 var nomeUnico = $"{Guid.NewGuid()}{extensao}";
-                var pasta = Path.Combine(_environment.WebRootPath, "uploads", "relatorios");
-                Directory.CreateDirectory(pasta);
-                var caminhoCompleto = Path.Combine(pasta, nomeUnico);
+                var contentType = extensao == ".pdf" ? "application/pdf"
+                    : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-                using (var stream = new FileStream(caminhoCompleto, FileMode.Create))
-                    await vm.Ficheiro.CopyToAsync(stream);
+                using (var stream = vm.Ficheiro.OpenReadStream())
+                    await _storage.EnviarAsync(stream, nomeUnico, contentType);
 
-                ficheiroPath = $"/uploads/relatorios/{nomeUnico}";
+                ficheiroPath = nomeUnico;
             }
 
             var relatorio = new Relatorio
@@ -156,13 +155,10 @@ namespace SGEEP.Web.Controllers
             }
             catch (Exception)
             {
-                // Rollback: apagar ficheiro órfão se o SaveChanges falhar
+                // Rollback: apagar ficheiro órfão do Supabase se o SaveChanges falhar
                 if (ficheiroPath != null)
                 {
-                    var caminhoFisico = Path.Combine(_environment.WebRootPath,
-                        ficheiroPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                    if (System.IO.File.Exists(caminhoFisico))
-                        System.IO.File.Delete(caminhoFisico);
+                    try { await _storage.ApagarAsync(ficheiroPath); } catch { /* best-effort */ }
                 }
                 TempData["Erro"] = "Ocorreu um erro ao guardar o relatório. Tente novamente.";
                 return View(vm);
@@ -260,22 +256,13 @@ namespace SGEEP.Web.Controllers
 
             if (!await TemAcesso(relatorio.Estagio)) return Forbid();
 
-            // Resolve the physical path and ensure it stays within the uploads directory
-            var uploadsRoot = Path.GetFullPath(Path.Combine(_environment.WebRootPath, "uploads", "relatorios"));
-            var normalised = relatorio.FicheiroPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            var caminhoFisico = Path.GetFullPath(Path.Combine(_environment.WebRootPath, normalised));
+            var bytes = await _storage.DescarregarAsync(relatorio.FicheiroPath);
 
-            if (!caminhoFisico.StartsWith(uploadsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                return BadRequest();
-
-            if (!System.IO.File.Exists(caminhoFisico))
-                return NotFound();
-
-            var extensao = Path.GetExtension(caminhoFisico).ToLower();
+            var extensao = Path.GetExtension(relatorio.FicheiroPath).ToLower();
             var contentType = extensao == ".pdf" ? "application/pdf"
                 : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-            return PhysicalFile(caminhoFisico, contentType, $"{relatorio.Titulo}{extensao}");
+            return File(bytes, contentType, $"{relatorio.Titulo}{extensao}");
         }
 
         private async Task<bool> TemAcesso(Estagio estagio)
