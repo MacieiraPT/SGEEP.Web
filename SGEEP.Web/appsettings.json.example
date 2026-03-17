@@ -21,8 +21,9 @@
     "EmailRemetente": ""
   },
   "Supabase": {
-    "Url": "",
-    "ChaveServico": "",
+    "EndpointS3": "",
+    "AccessKeyId": "",
+    "SecretAccessKey": "",
     "NomeBucket": "relatorios"
   }
 }

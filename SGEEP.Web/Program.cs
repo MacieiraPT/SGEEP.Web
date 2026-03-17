@@ -6,7 +6,6 @@ using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Middleware;
 using SGEEP.Web.Models;
 using SGEEP.Web.Services;
-using SupabaseSettings = SGEEP.Web.Models.SupabaseSettings;
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
