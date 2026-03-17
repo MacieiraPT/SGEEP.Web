@@ -19,5 +19,10 @@
     "Palavra": "",
     "NomeRemetente": "SGEEP",
     "EmailRemetente": ""
+  },
+  "Supabase": {
+    "Url": "",
+    "ChaveServico": "",
+    "NomeBucket": "relatorios"
   }
 }

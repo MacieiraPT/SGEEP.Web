@@ -6,6 +6,7 @@ using SGEEP.Infrastructure.Data;
 using SGEEP.Web.Middleware;
 using SGEEP.Web.Models;
 using SGEEP.Web.Services;
+using SupabaseSettings = SGEEP.Web.Models.SupabaseSettings;
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -44,6 +45,8 @@ builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<SupabaseSettings>(builder.Configuration.GetSection("Supabase"));
+builder.Services.AddSingleton<IFicheiroStorageService, SupabaseStorageService>();
 builder.Services.AddHttpContextAccessor();
 
 // MVC
@@ -108,8 +111,5 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
     await SGEEP.Web.Data.SeedData.InicializarAsync(scope.ServiceProvider);
 }
-
-var uploadsPath = Path.Combine(builder.Environment.WebRootPath, "uploads", "relatorios");
-Directory.CreateDirectory(uploadsPath);
 
 app.Run();
