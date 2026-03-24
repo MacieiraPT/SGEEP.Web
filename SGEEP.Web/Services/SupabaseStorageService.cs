@@ -20,7 +20,8 @@ namespace SGEEP.Web.Services
             _s3 = new AmazonS3Client(credenciais, new AmazonS3Config
             {
                 ServiceURL = config.EndpointS3,
-                ForcePathStyle = true
+                ForcePathStyle = true,
+                AuthenticationRegion = "eu-west-1"
             });
         }
 
