@@ -131,8 +131,16 @@ namespace SGEEP.Web.Controllers
                 var contentType = extensao == ".pdf" ? "application/pdf"
                     : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-                using (var stream = vm.Ficheiro.OpenReadStream())
-                    await _storage.EnviarAsync(stream, nomeUnico, contentType);
+                try
+                {
+                    using (var stream = vm.Ficheiro.OpenReadStream())
+                        await _storage.EnviarAsync(stream, nomeUnico, contentType);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("Ficheiro", "Erro ao enviar o ficheiro. Tente novamente.");
+                    return View(vm);
+                }
 
                 ficheiroPath = nomeUnico;
             }
