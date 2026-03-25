@@ -77,7 +77,6 @@ namespace SGEEP.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Aluno")]
-        [RequestSizeLimit(52_428_800)]
         public async Task<IActionResult> Create(RelatorioViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);

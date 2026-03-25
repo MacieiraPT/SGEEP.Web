@@ -41,7 +41,6 @@ namespace SGEEP.Web.Controllers
         // POST: Import/Importar
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequestSizeLimit(52_428_800)]
         public async Task<IActionResult> Importar(ImportViewModel vm)
         {
             if (vm.Ficheiro == null || vm.Ficheiro.Length == 0)

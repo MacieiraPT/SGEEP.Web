@@ -48,16 +48,6 @@ builder.Services.Configure<SupabaseSettings>(builder.Configuration.GetSection("S
 builder.Services.AddSingleton<IFicheiroStorageService, SupabaseStorageService>();
 builder.Services.AddHttpContextAccessor();
 
-// Limites para upload de ficheiros
-builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = 52_428_800; // 50 MB
-});
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.Limits.MaxRequestBodySize = 52_428_800; // 50 MB
-});
-
 // MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
