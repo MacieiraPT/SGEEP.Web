@@ -6,7 +6,7 @@ namespace SGEEP.Web.Helpers
         {
             if (headerBytes.Length < 4) return false;
 
-            return extensao.ToLower() switch
+            return extensao.ToLowerInvariant() switch
             {
                 ".pdf" => headerBytes[0] == 0x25 && headerBytes[1] == 0x50 &&
                           headerBytes[2] == 0x44 && headerBytes[3] == 0x46, // %PDF

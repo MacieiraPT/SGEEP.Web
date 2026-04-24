@@ -99,11 +99,11 @@ namespace SGEEP.Web.Controllers
             {
                 // Validar tipo de ficheiro
                 var extensoesPermitidas = new[] { ".pdf", ".docx", ".doc" };
-                var extensao = Path.GetExtension(vm.Ficheiro.FileName).ToLower();
+                var extensao = Path.GetExtension(vm.Ficheiro.FileName).ToLowerInvariant();
 
                 if (!extensoesPermitidas.Contains(extensao))
                 {
-                    ModelState.AddModelError("Ficheiro", "Apenas são permitidos ficheiros PDF ou DOCX.");
+                    ModelState.AddModelError("Ficheiro", "Apenas são permitidos ficheiros PDF, DOCX ou DOC.");
                     return View(vm);
                 }
 
@@ -118,7 +118,15 @@ namespace SGEEP.Web.Controllers
                 using (var checkStream = vm.Ficheiro.OpenReadStream())
                 {
                     var headerBytes = new byte[4];
-                    await checkStream.ReadAsync(headerBytes, 0, 4);
+                    try
+                    {
+                        await checkStream.ReadExactlyAsync(headerBytes, 0, 4);
+                    }
+                    catch (EndOfStreamException)
+                    {
+                        ModelState.AddModelError("Ficheiro", "O ficheiro é demasiado pequeno ou está corrompido.");
+                        return View(vm);
+                    }
 
                     if (!Helpers.ValidadorFicheiro.ValidarMagicBytes(headerBytes, extensao))
                     {
@@ -129,15 +137,14 @@ namespace SGEEP.Web.Controllers
 
                 // Guardar ficheiro no Supabase Storage
                 var nomeUnico = $"{Guid.NewGuid()}{extensao}";
-                var contentType = extensao == ".pdf" ? "application/pdf"
-                    : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                var contentType = ContentTypePara(extensao);
 
                 try
                 {
                     using (var stream = vm.Ficheiro.OpenReadStream())
                         await _storage.EnviarAsync(stream, nomeUnico, contentType);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     ModelState.AddModelError("Ficheiro", "Erro ao enviar o ficheiro. Tente novamente.");
                     return View(vm);
@@ -267,12 +274,19 @@ namespace SGEEP.Web.Controllers
 
             var bytes = await _storage.DescarregarAsync(relatorio.FicheiroPath);
 
-            var extensao = Path.GetExtension(relatorio.FicheiroPath).ToLower();
-            var contentType = extensao == ".pdf" ? "application/pdf"
-                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            var extensao = Path.GetExtension(relatorio.FicheiroPath).ToLowerInvariant();
+            var contentType = ContentTypePara(extensao);
 
             return File(bytes, contentType, $"{relatorio.Titulo}{extensao}");
         }
+
+        private static string ContentTypePara(string extensao) => extensao switch
+        {
+            ".pdf" => "application/pdf",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".doc" => "application/msword",
+            _ => "application/octet-stream"
+        };
 
         private async Task<bool> TemAcesso(Estagio estagio)
         {
