@@ -22,21 +22,19 @@
 
     @if (User.Identity?.IsAuthenticated == true)
     {
-        @{
-            var initial = string.IsNullOrEmpty(User.Identity.Name)
-                ? "?"
-                : User.Identity.Name.Substring(0, 1).ToUpperInvariant();
-            var displayName = User.Identity.Name?.Split('@')[0] ?? "Utilizador";
-            string role =
-                User.IsInRole("Administrador") ? "Administrador" :
-                User.IsInRole("Professor")     ? "Professor" :
-                User.IsInRole("Aluno")         ? "Aluno" :
-                User.IsInRole("Empresa")       ? "Tutor de Empresa" : "Utilizador";
-            string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-            string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
-            bool IsActive(string controller, string? action = null) =>
-                currentController == controller && (action == null || currentAction == action);
-        }
+        var initial = string.IsNullOrEmpty(User.Identity.Name)
+            ? "?"
+            : User.Identity.Name.Substring(0, 1).ToUpperInvariant();
+        var displayName = User.Identity.Name?.Split('@')[0] ?? "Utilizador";
+        string role =
+            User.IsInRole("Administrador") ? "Administrador" :
+            User.IsInRole("Professor")     ? "Professor" :
+            User.IsInRole("Aluno")         ? "Aluno" :
+            User.IsInRole("Empresa")       ? "Tutor de Empresa" : "Utilizador";
+        string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+        bool IsActive(string controller, string? action = null) =>
+            currentController == controller && (action == null || currentAction == action);
 
         <nav id="sidebar" aria-label="Navegação principal">
             <div class="sidebar-brand">
