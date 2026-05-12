@@ -18,19 +18,22 @@ namespace SGEEP.Web.Controllers
         private readonly AuditoriaService _auditoria;
         private readonly IEmailService _emailService;
         private readonly IFicheiroStorageService _storage;
+        private readonly ILogger<RelatoriosController> _logger;
 
         public RelatoriosController(
             ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
             AuditoriaService auditoria,
             IEmailService emailService,
-            IFicheiroStorageService storage)
+            IFicheiroStorageService storage,
+            ILogger<RelatoriosController> logger)
         {
             _context = context;
             _userManager = userManager;
             _auditoria = auditoria;
             _emailService = emailService;
             _storage = storage;
+            _logger = logger;
         }
 
         // GET: Relatorios/Index/5 (por estágio)
@@ -114,11 +117,11 @@ namespace SGEEP.Web.Controllers
                     return View(vm);
                 }
 
-                // Validar magic bytes do ficheiro
+                // Validar magic bytes do ficheiro (lê pelo menos 4 bytes;
+                // ReadAsync pode devolver leituras parciais).
                 using (var checkStream = vm.Ficheiro.OpenReadStream())
                 {
-                    var headerBytes = new byte[4];
-                    await checkStream.ReadAsync(headerBytes, 0, 4);
+                    var headerBytes = await Helpers.ValidadorFicheiro.LerCabecalhoAsync(checkStream, 4);
 
                     if (!Helpers.ValidadorFicheiro.ValidarMagicBytes(headerBytes, extensao))
                     {
@@ -139,6 +142,7 @@ namespace SGEEP.Web.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Falha ao enviar ficheiro de relatório para storage (Estágio #{EstagioId})", vm.EstagioId);
                     ModelState.AddModelError("Ficheiro", "Erro ao enviar o ficheiro. Tente novamente.");
                     return View(vm);
                 }
@@ -162,12 +166,17 @@ namespace SGEEP.Web.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Falha ao guardar relatório (Estágio #{EstagioId})", vm.EstagioId);
                 // Rollback: apagar ficheiro órfão do Supabase se o SaveChanges falhar
                 if (ficheiroPath != null)
                 {
-                    try { await _storage.ApagarAsync(ficheiroPath); } catch { /* best-effort */ }
+                    try { await _storage.ApagarAsync(ficheiroPath); }
+                    catch (Exception cleanupEx)
+                    {
+                        _logger.LogWarning(cleanupEx, "Falha ao remover ficheiro órfão {Path}", ficheiroPath);
+                    }
                 }
                 TempData["Erro"] = "Ocorreu um erro ao guardar o relatório. Tente novamente.";
                 return View(vm);
@@ -240,7 +249,7 @@ namespace SGEEP.Web.Controllers
                     $"SGEEP — Relatório {char.ToUpper(estadoTexto[0])}{estadoTexto[1..]}",
                     EmailTemplates.Envolver(
                         EmailTemplates.Saudacao(estagioCom.Aluno.Nome) +
-                        $"<p>O seu relatório <strong>{relatorio.Titulo}</strong> foi {EmailTemplates.BadgeEstado(estadoTexto, tipoEstado)}.</p>" +
+                        $"<p>O seu relatório <strong>{EmailTemplates.Texto(relatorio.Titulo)}</strong> foi {EmailTemplates.BadgeEstado(estadoTexto, tipoEstado)}.</p>" +
                         (string.IsNullOrEmpty(vm.ComentarioProfessor) ? "" :
                             EmailTemplates.CaixaComentario("Comentário do Professor", vm.ComentarioProfessor)) +
                         EmailTemplates.Assinatura()));

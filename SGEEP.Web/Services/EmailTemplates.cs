@@ -1,7 +1,17 @@
+using System.Net;
+
 namespace SGEEP.Web.Services
 {
     public static class EmailTemplates
     {
+        // Todos os valores fornecidos pelo chamador podem conter dados controlados
+        // pelo utilizador (nomes, comentários, emails). São sempre encoded antes
+        // de serem interpolados no HTML para evitar injeção/phishing via email.
+        // Os controllers devem usar Texto(...) para interpolar strings dinâmicas
+        // que não passam por nenhum dos helpers abaixo.
+        public static string Texto(string? valor) => WebUtility.HtmlEncode(valor ?? string.Empty);
+        private static string E(string? valor) => Texto(valor);
+
         private const string CorPrimaria = "#1e40af";
         private const string CorPrimariaClara = "#3b82f6";
         private const string CorFundo = "#f0f4f8";
@@ -93,7 +103,7 @@ namespace SGEEP.Web.Services
         /// </summary>
         public static string Saudacao(string nome)
         {
-            return $@"<p style=""margin:0 0 20px 0;font-size:16px;"">Caro(a) <strong>{nome}</strong>,</p>";
+            return $@"<p style=""margin:0 0 20px 0;font-size:16px;"">Caro(a) <strong>{E(nome)}</strong>,</p>";
         }
 
         /// <summary>
@@ -125,7 +135,7 @@ namespace SGEEP.Web.Services
             <span style=""font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">Email</span>
           </td>
           <td style=""vertical-align:middle;"">
-            <span style=""font-size:15px;color:#1e293b;"">{email}</span>
+            <span style=""font-size:15px;color:#1e293b;"">{E(email)}</span>
           </td>
         </tr>
       </table>
@@ -139,7 +149,7 @@ namespace SGEEP.Web.Services
             <span style=""font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">Password</span>
           </td>
           <td style=""vertical-align:middle;"">
-            <code style=""background:#1e293b;color:#e2e8f0;padding:6px 14px;border-radius:6px;font-size:14px;font-family:'Courier New',monospace;letter-spacing:1px;"">{password}</code>
+            <code style=""background:#1e293b;color:#e2e8f0;padding:6px 14px;border-radius:6px;font-size:14px;font-family:'Courier New',monospace;letter-spacing:1px;"">{E(password)}</code>
           </td>
         </tr>
       </table>
@@ -160,10 +170,10 @@ namespace SGEEP.Web.Services
       <table cellpadding=""0"" cellspacing=""0"" role=""presentation"">
         <tr>
           <td style=""padding-right:16px;vertical-align:middle;"">
-            <span style=""font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">{rotulo}</span>
+            <span style=""font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">{E(rotulo)}</span>
           </td>
           <td style=""vertical-align:middle;"">
-            <span style=""{estiloValor}"">{valor}</span>
+            <span style=""{estiloValor}"">{E(valor)}</span>
           </td>
         </tr>
       </table>
@@ -183,7 +193,7 @@ namespace SGEEP.Web.Services
       <table cellpadding=""0"" cellspacing=""0"" role=""presentation"">
         <tr>
           <td style=""vertical-align:middle;padding-right:10px;font-size:18px;"">&#9888;&#65039;</td>
-          <td style=""vertical-align:middle;color:{CorAviso};font-size:14px;font-weight:500;line-height:1.5;"">{mensagem}</td>
+          <td style=""vertical-align:middle;color:{CorAviso};font-size:14px;font-weight:500;line-height:1.5;"">{E(mensagem)}</td>
         </tr>
       </table>
     </td>
@@ -203,7 +213,7 @@ namespace SGEEP.Web.Services
                 "info" => (CorPrimaria, "#eff6ff", "#bfdbfe"),
                 _ => (CorTexto, "#f8fafc", "#e2e8f0")
             };
-            return $@"<span style=""display:inline-block;background:{fundo};color:{cor};border:1px solid {borda};padding:3px 12px;border-radius:20px;font-size:14px;font-weight:700;"">{texto}</span>";
+            return $@"<span style=""display:inline-block;background:{fundo};color:{cor};border:1px solid {borda};padding:3px 12px;border-radius:20px;font-size:14px;font-weight:700;"">{E(texto)}</span>";
         }
 
         /// <summary>
@@ -214,8 +224,8 @@ namespace SGEEP.Web.Services
             return $@"<table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:20px 0;"">
   <tr>
     <td style=""background:#f8fafc;border-left:4px solid {CorPrimaria};border-radius:0 8px 8px 0;padding:16px 20px;"">
-      <p style=""margin:0 0 6px 0;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">{rotulo}</p>
-      <p style=""margin:0;font-size:14px;color:{CorTexto};line-height:1.6;"">{comentario}</p>
+      <p style=""margin:0 0 6px 0;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">{E(rotulo)}</p>
+      <p style=""margin:0;font-size:14px;color:{CorTexto};line-height:1.6;"">{E(comentario)}</p>
     </td>
   </tr>
 </table>";

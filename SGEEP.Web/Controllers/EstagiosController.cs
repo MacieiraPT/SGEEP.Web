@@ -350,7 +350,7 @@ namespace SGEEP.Web.Controllers
                     "SGEEP — Estágio Ativado",
                     EmailTemplates.Envolver(
                         EmailTemplates.Saudacao(estagio.Aluno.Nome) +
-                        $"<p>O seu estágio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi {EmailTemplates.BadgeEstado("ativado", "sucesso")}.</p>" +
+                        $"<p>O seu estágio na empresa <strong>{EmailTemplates.Texto(estagio.Empresa?.Nome)}</strong> foi {EmailTemplates.BadgeEstado("ativado", "sucesso")}.</p>" +
                         EmailTemplates.Assinatura()));
 
             // Enviar email à empresa
@@ -359,7 +359,7 @@ namespace SGEEP.Web.Controllers
                     "SGEEP — Novo Estágio Ativo",
                     EmailTemplates.Envolver(
                         EmailTemplates.Saudacao(estagio.Empresa?.NomeTutor ?? "Tutor") +
-                        $"<p>O estágio do aluno <strong>{estagio.Aluno?.Nome}</strong> foi {EmailTemplates.BadgeEstado("ativado", "sucesso")}.</p>" +
+                        $"<p>O estágio do aluno <strong>{EmailTemplates.Texto(estagio.Aluno?.Nome)}</strong> foi {EmailTemplates.BadgeEstado("ativado", "sucesso")}.</p>" +
                         EmailTemplates.Assinatura()));
 
             TempData["Sucesso"] = "Estágio ativado com sucesso!";
@@ -509,7 +509,7 @@ namespace SGEEP.Web.Controllers
                     "SGEEP — Estágio Concluído",
                     EmailTemplates.Envolver(
                         EmailTemplates.Saudacao(estagio.Aluno.Nome) +
-                        $"<p>O seu estágio na empresa <strong>{estagio.Empresa?.Nome}</strong> foi {EmailTemplates.BadgeEstado("concluído", "sucesso")}.</p>" +
+                        $"<p>O seu estágio na empresa <strong>{EmailTemplates.Texto(estagio.Empresa?.Nome)}</strong> foi {EmailTemplates.BadgeEstado("concluído", "sucesso")}.</p>" +
                         EmailTemplates.TabelaInfo("Nota Final", $"{vm.NotaFinal:F1}", "#1e40af", "24px") +
                         EmailTemplates.Assinatura()));
 
@@ -517,15 +517,6 @@ namespace SGEEP.Web.Controllers
 
             TempData["Sucesso"] = "Estágio concluído e avaliação registada com sucesso!";
             return RedirectToAction(nameof(Details), new { id = estagio.Id });
-        }
-
-        private async Task<bool> ProfessorTemAcesso(int professorIdDoEstagio)
-        {
-            if (!User.IsInRole("Professor")) return true;
-            var userEmail = User.Identity!.Name;
-            var professor = await _context.Professores
-                .FirstOrDefaultAsync(p => p.Email == userEmail);
-            return professor?.Id == professorIdDoEstagio;
         }
 
         // Acesso a mutações (Edit/Ativar/Cancelar/Concluir): apenas DC do mesmo curso

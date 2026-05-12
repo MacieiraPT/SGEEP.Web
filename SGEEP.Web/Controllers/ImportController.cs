@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SGEEP.Core.Entities;
 using SGEEP.Infrastructure.Data;
+using SGEEP.Web.Helpers;
 using SGEEP.Web.Models.ViewModels;
 using SGEEP.Web.Services;
 using System.Security.Claims;
-using System.Security.Cryptography;
 
 namespace SGEEP.Web.Controllers
 {
@@ -221,7 +221,7 @@ namespace SGEEP.Web.Controllers
                     EmailConfirmed = true
                 };
 
-                var passwordTemporaria = GerarPasswordTemporaria();
+                var passwordTemporaria = PasswordGenerator.GerarTemporaria();
                 var identityResult = await _userManager.CreateAsync(user, passwordTemporaria);
                 if (!identityResult.Succeeded)
                 {
@@ -377,7 +377,7 @@ namespace SGEEP.Web.Controllers
                     EmailConfirmed = true
                 };
 
-                var passwordTemporaria = GerarPasswordTemporaria();
+                var passwordTemporaria = PasswordGenerator.GerarTemporaria();
                 var identityResult = await _userManager.CreateAsync(user, passwordTemporaria);
                 if (!identityResult.Succeeded)
                 {
@@ -482,28 +482,5 @@ namespace SGEEP.Web.Controllers
             return linhas;
         }
 
-        private static string GerarPasswordTemporaria()
-        {
-            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-            const string lower = "abcdefghijkmnpqrstuvwxyz";
-            const string digits = "23456789";
-            const string special = "!@#$%";
-            const string all = upper + lower + digits + special;
-
-            var bytes = RandomNumberGenerator.GetBytes(12);
-            var chars = new char[12];
-            chars[0] = upper[bytes[0] % upper.Length];
-            chars[1] = digits[bytes[1] % digits.Length];
-            chars[2] = special[bytes[2] % special.Length];
-            for (int i = 3; i < 12; i++)
-                chars[i] = all[bytes[i] % all.Length];
-
-            for (int i = chars.Length - 1; i > 0; i--)
-            {
-                var j = bytes[i % bytes.Length] % (i + 1);
-                (chars[i], chars[j]) = (chars[j], chars[i]);
-            }
-            return new string(chars);
-        }
     }
 }
