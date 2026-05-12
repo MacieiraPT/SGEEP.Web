@@ -5,16 +5,18 @@ namespace SGEEP.Web.Services
         /// <summary>
         /// Envia um ficheiro para o armazenamento e devolve o caminho/identificador guardado.
         /// </summary>
-        Task<string> EnviarAsync(Stream conteudo, string nomeUnico, string contentType);
+        Task<string> EnviarAsync(Stream conteudo, string nomeUnico, string contentType, CancellationToken ct = default);
 
         /// <summary>
-        /// Remove um ficheiro do armazenamento.
+        /// Remove um ficheiro do armazenamento. Tolera ficheiros já inexistentes.
         /// </summary>
-        Task ApagarAsync(string caminhoFicheiro);
+        Task ApagarAsync(string caminhoFicheiro, CancellationToken ct = default);
 
         /// <summary>
-        /// Descarrega o conteúdo de um ficheiro do armazenamento.
+        /// Abre um ficheiro do armazenamento como stream. O caller é responsável
+        /// por libertar (dispose) o stream — em ASP.NET Core, devolver o stream
+        /// num FileStreamResult trata disto automaticamente.
         /// </summary>
-        Task<byte[]> DescarregarAsync(string caminhoFicheiro);
+        Task<Stream> AbrirAsync(string caminhoFicheiro, CancellationToken ct = default);
     }
 }

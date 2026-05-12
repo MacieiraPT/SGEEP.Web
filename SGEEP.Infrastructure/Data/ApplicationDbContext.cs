@@ -83,6 +83,33 @@ namespace SGEEP.Infrastructure.Data
                 .HasIndex(p => p.NIF)
                 .IsUnique();
 
+            // Índices em colunas usadas nas verificações de identidade/autorização
+            // (`p.Email == userEmail`, `a.ApplicationUserId == user.Id`, etc.).
+            // Sem estes índices o Postgres faz Seq Scan nestas tabelas a cada
+            // pedido — ver references/query-missing-indexes.md.
+            builder.Entity<Professor>()
+                .HasIndex(p => p.Email);
+            builder.Entity<Professor>()
+                .HasIndex(p => p.ApplicationUserId);
+
+            builder.Entity<Aluno>()
+                .HasIndex(a => a.ApplicationUserId);
+
+            builder.Entity<Empresa>()
+                .HasIndex(e => e.ApplicationUserId);
+
+            // Notificações: lookup + ordering por utilizador (composite, DataCriacao
+            // descendente para servir o "últimas N" diretamente do índice).
+            builder.Entity<Notificacao>()
+                .HasIndex(n => new { n.ApplicationUserId, n.DataCriacao })
+                .HasDatabaseName("IX_Notificacoes_User_Data");
+
+            // RegistoHoras: queries por estágio + range de datas (Estagios.Edit
+            // verifica registos fora do período antes de alterar datas).
+            builder.Entity<RegistoHoras>()
+                .HasIndex(r => new { r.EstagioId, r.Data })
+                .HasDatabaseName("IX_RegistoHoras_Estagio_Data");
+
             // Remover shadow property AlunoId1 — configurar explicitamente a relação
             builder.Entity<Estagio>()
                 .HasOne(e => e.Aluno)

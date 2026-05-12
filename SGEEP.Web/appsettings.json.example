@@ -21,9 +21,26 @@
     "EmailRemetente": ""
   },
   "Supabase": {
+    // Endpoint S3 do projeto Supabase. Formato:
+    //   https://<project-ref>.supabase.co/storage/v1/s3
+    // (Settings → API → S3 Connection no dashboard Supabase.)
     "EndpointS3": "",
+    // Credenciais S3 do bucket (Storage → S3 Access Keys no dashboard).
+    // NUNCA cometer; preferir variáveis de ambiente:
+    //   Supabase__AccessKeyId, Supabase__SecretAccessKey
     "AccessKeyId": "",
     "SecretAccessKey": "",
-    "NomeBucket": "relatorios"
+    "NomeBucket": "relatorios",
+    // Região configurada no projeto Supabase (eu-west-1, us-east-1, ...).
+    "Regiao": "eu-west-1",
+    // Timeout (segundos) para upload/download. Default: 60.
+    "TimeoutSegundos": 60
+  },
+  "Seed": {
+    // Email e password do administrador inicial. Se a password ficar vazia,
+    // o sistema gera uma aleatória e regista-a UMA vez nos logs no primeiro
+    // arranque — o operador deve mudar a password no primeiro acesso.
+    "AdminEmail": "admin@sgeep.pt",
+    "AdminPassword": ""
   }
 }
