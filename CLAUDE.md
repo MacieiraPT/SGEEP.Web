@@ -1,5 +1,13 @@
 # CLAUDE.md - AI Assistant Guide for SGEEP.Web
 
+## UI Design System
+
+**Before writing or modifying ANY UI (Razor views, CSS, email HTML, error pages), read `DESIGN.md` at the repo root.** It defines the design system (Cal.com-inspired): white canvas, black primary CTAs (`#111111`), Inter body, Cal Sans display headlines with negative letter-spacing (-0.5 to -2px), 8px button/input radius, 12px card radius. Dark surface (`#101010`) is reserved for the footer and the featured pricing tier — nowhere else. Accent blue (`#3b82f6`) and badge pastels never appear on primary CTAs.
+
+The tokens are implemented in `SGEEP.Web/wwwroot/css/sgeep-theme.css` as CSS variables (`--sg-primary`, `--sg-canvas`, `--sg-hairline`, etc.) plus Bootstrap overrides. Prefer those variables and existing Bootstrap classes (`btn-primary`, `card`, `badge`, `alert`) — they already render with the Cal palette. Do not reintroduce navy/blue gradients or hard-coded hex values that conflict.
+
+Standalone pages (`Login.cshtml`, `Logout.cshtml`, `Error.cshtml`) bypass `_Layout.cshtml`; they still include `~/css/sgeep-theme.css` and use the same tokens.
+
 ## Project Overview
 
 SGEEP (Sistema de Gestão de Estágios para Escolas Profissionais) is an internship and professional employability management system built as an ASP.NET Core 8 MVC application with a layered architecture. The UI and domain language is **Portuguese**.

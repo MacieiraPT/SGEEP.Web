@@ -20,7 +20,17 @@ namespace SGEEP.Web.Models
         public static async Task<PaginatedList<T>> CreateAsync(
             IQueryable<T> source, int pageIndex, int pageSize)
         {
+            if (pageSize < 1) pageSize = 1;
+
             var count = await source.CountAsync();
+            var totalPages = (int)Math.Ceiling(count / (double)pageSize);
+
+            // Clamp pageIndex — prevents EF "negative Skip" exceptions when a
+            // user passes ?pagina=-5 or ?pagina=0, and avoids leaking internal
+            // exceptions to the response.
+            if (pageIndex < 1) pageIndex = 1;
+            if (totalPages > 0 && pageIndex > totalPages) pageIndex = totalPages;
+
             var items = await source
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)

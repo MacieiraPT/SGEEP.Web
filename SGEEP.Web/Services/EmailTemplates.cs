@@ -1,15 +1,34 @@
+using System.Net;
+
 namespace SGEEP.Web.Services
 {
     public static class EmailTemplates
     {
-        private const string CorPrimaria = "#1e40af";
-        private const string CorPrimariaClara = "#3b82f6";
-        private const string CorFundo = "#f0f4f8";
-        private const string CorTexto = "#1e293b";
-        private const string CorTextoSecundario = "#64748b";
-        private const string CorSucesso = "#15803d";
-        private const string CorErro = "#dc2626";
-        private const string CorAviso = "#b45309";
+        // Todos os valores fornecidos pelo chamador podem conter dados controlados
+        // pelo utilizador (nomes, comentários, emails). São sempre encoded antes
+        // de serem interpolados no HTML para evitar injeção/phishing via email.
+        // Os controllers devem usar Texto(...) para interpolar strings dinâmicas
+        // que não passam por nenhum dos helpers abaixo.
+        public static string Texto(string? valor) => WebUtility.HtmlEncode(valor ?? string.Empty);
+        private static string E(string? valor) => Texto(valor);
+
+        // Paleta alinhada com /DESIGN.md (Cal.com-inspired): canvas branca,
+        // primário preto, contraste subtil. Os mesmos tokens das views.
+        private const string CorPrimaria = "#111111";
+        private const string CorPrimariaClara = "#242424";
+        private const string CorFundo = "#ffffff";
+        private const string CorCanvas = "#ffffff";
+        private const string CorSuperficieSoft = "#f8f9fa";
+        private const string CorSuperficieCard = "#f5f5f5";
+        private const string CorHairline = "#e5e7eb";
+        private const string CorHairlineSoft = "#f3f4f6";
+        private const string CorTexto = "#111111";
+        private const string CorBody = "#374151";
+        private const string CorTextoSecundario = "#6b7280";
+        private const string CorTextoTerciario = "#898989";
+        private const string CorSucesso = "#10b981";
+        private const string CorErro = "#ef4444";
+        private const string CorAviso = "#f59e0b";
 
         /// <summary>
         /// Envolve o conteúdo HTML num layout de email estilizado com cabeçalho e rodapé SGEEP.
@@ -23,53 +42,36 @@ namespace SGEEP.Web.Services
   <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
   <title>SGEEP</title>
 </head>
-<body style=""margin:0;padding:0;background-color:{CorFundo};font-family:'Segoe UI',Roboto,Arial,sans-serif;color:{CorTexto};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;"">
-  <table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""background-color:{CorFundo};padding:40px 16px;"">
+<body style=""margin:0;padding:0;background-color:{CorSuperficieSoft};font-family:'Inter','Segoe UI',Roboto,Arial,sans-serif;color:{CorBody};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;"">
+  <table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""background-color:{CorSuperficieSoft};padding:40px 16px;"">
     <tr>
       <td align=""center"">
-        <table width=""600"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""max-width:600px;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);"">
+        <table width=""600"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""max-width:600px;width:100%;background-color:{CorCanvas};border:1px solid {CorHairline};border-radius:12px;overflow:hidden;"">
 
           <!-- Cabeçalho -->
           <tr>
-            <td style=""background:linear-gradient(135deg,{CorPrimaria} 0%,{CorPrimariaClara} 100%);padding:0;"">
-              <table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"">
-                <tr>
-                  <td style=""padding:32px 40px 28px 40px;text-align:center;"">
-                    <table cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:0 auto;"">
-                      <tr>
-                        <td style=""background:rgba(255,255,255,0.18);border-radius:10px;padding:8px 18px;"">
-                          <span style=""font-size:26px;font-weight:800;color:#ffffff;letter-spacing:2px;text-decoration:none;"">SGEEP</span>
-                        </td>
-                      </tr>
-                    </table>
-                    <p style=""margin:12px 0 0 0;font-size:13px;color:rgba(255,255,255,0.8);letter-spacing:0.3px;line-height:1.4;"">
-                      Sistema de Gestão de Estágios para Escolas Profissionais
-                    </p>
-                  </td>
-                </tr>
-              </table>
+            <td style=""background-color:{CorCanvas};padding:32px 40px 16px 40px;border-bottom:1px solid {CorHairlineSoft};"">
+              <span style=""font-size:22px;font-weight:600;color:{CorTexto};letter-spacing:-1px;"">SGEEP</span>
+              <p style=""margin:6px 0 0 0;font-size:13px;color:{CorTextoSecundario};line-height:1.5;"">
+                Sistema de Gestão de Estágios para Escolas Profissionais
+              </p>
             </td>
-          </tr>
-
-          <!-- Barra decorativa -->
-          <tr>
-            <td style=""background:linear-gradient(90deg,{CorPrimaria},{CorPrimariaClara},{CorPrimaria});height:3px;font-size:0;line-height:0;"">&nbsp;</td>
           </tr>
 
           <!-- Conteúdo -->
           <tr>
-            <td style=""background-color:#ffffff;padding:40px 44px;font-size:15px;line-height:1.75;color:{CorTexto};"">
+            <td style=""background-color:{CorCanvas};padding:36px 40px;font-size:15px;line-height:1.7;color:{CorBody};"">
               {conteudo}
             </td>
           </tr>
 
           <!-- Rodapé -->
           <tr>
-            <td style=""background-color:#f8fafc;padding:24px 40px;text-align:center;border-top:1px solid #e2e8f0;"">
+            <td style=""background-color:{CorSuperficieSoft};padding:20px 40px;text-align:center;border-top:1px solid {CorHairlineSoft};"">
               <p style=""margin:0 0 4px 0;font-size:12px;color:{CorTextoSecundario};line-height:1.5;"">
                 Este é um email automático — por favor não responda.
               </p>
-              <p style=""margin:0;font-size:11px;color:#94a3b8;"">
+              <p style=""margin:0;font-size:11px;color:{CorTextoTerciario};"">
                 &copy; {DateTime.Now.Year} SGEEP — Sistema de Gestão de Estágios
               </p>
             </td>
@@ -77,8 +79,7 @@ namespace SGEEP.Web.Services
 
         </table>
 
-        <!-- Texto extra abaixo do email -->
-        <p style=""margin:20px 0 0 0;font-size:11px;color:#94a3b8;text-align:center;"">
+        <p style=""margin:16px 0 0 0;font-size:11px;color:{CorTextoTerciario};text-align:center;"">
           Recebeu este email porque tem uma conta no SGEEP.
         </p>
       </td>
@@ -93,7 +94,7 @@ namespace SGEEP.Web.Services
         /// </summary>
         public static string Saudacao(string nome)
         {
-            return $@"<p style=""margin:0 0 20px 0;font-size:16px;"">Caro(a) <strong>{nome}</strong>,</p>";
+            return $@"<p style=""margin:0 0 20px 0;font-size:16px;"">Caro(a) <strong>{E(nome)}</strong>,</p>";
         }
 
         /// <summary>
@@ -101,11 +102,11 @@ namespace SGEEP.Web.Services
         /// </summary>
         public static string Assinatura()
         {
-            return @"<table cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin-top:32px;"">
+            return $@"<table cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin-top:32px;"">
   <tr>
-    <td style=""border-top:1px solid #e2e8f0;padding-top:16px;"">
-      <p style=""margin:0;color:#64748b;font-size:14px;"">Cumprimentos,</p>
-      <p style=""margin:4px 0 0 0;font-size:15px;font-weight:700;color:#1e40af;"">SGEEP</p>
+    <td style=""border-top:1px solid {CorHairlineSoft};padding-top:16px;"">
+      <p style=""margin:0;color:{CorTextoSecundario};font-size:14px;"">Cumprimentos,</p>
+      <p style=""margin:4px 0 0 0;font-size:15px;font-weight:600;color:{CorTexto};letter-spacing:-0.3px;"">SGEEP</p>
     </td>
   </tr>
 </table>";
@@ -116,16 +117,16 @@ namespace SGEEP.Web.Services
         /// </summary>
         public static string TabelaCredenciais(string email, string password)
         {
-            return $@"<table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:20px 0;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;overflow:hidden;"">
+            return $@"<table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:20px 0;border-radius:8px;background:{CorSuperficieCard};border:1px solid {CorHairline};overflow:hidden;"">
   <tr>
-    <td style=""padding:14px 20px;border-bottom:1px solid #e2e8f0;"">
+    <td style=""padding:14px 20px;border-bottom:1px solid {CorHairline};"">
       <table cellpadding=""0"" cellspacing=""0"" role=""presentation"">
         <tr>
           <td style=""padding-right:16px;vertical-align:middle;"">
-            <span style=""font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">Email</span>
+            <span style=""font-size:12px;color:{CorTextoSecundario};font-weight:600;text-transform:uppercase;letter-spacing:0.6px;"">Email</span>
           </td>
           <td style=""vertical-align:middle;"">
-            <span style=""font-size:15px;color:#1e293b;"">{email}</span>
+            <span style=""font-size:15px;color:{CorTexto};"">{E(email)}</span>
           </td>
         </tr>
       </table>
@@ -136,10 +137,10 @@ namespace SGEEP.Web.Services
       <table cellpadding=""0"" cellspacing=""0"" role=""presentation"">
         <tr>
           <td style=""padding-right:16px;vertical-align:middle;"">
-            <span style=""font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">Password</span>
+            <span style=""font-size:12px;color:{CorTextoSecundario};font-weight:600;text-transform:uppercase;letter-spacing:0.6px;"">Password</span>
           </td>
           <td style=""vertical-align:middle;"">
-            <code style=""background:#1e293b;color:#e2e8f0;padding:6px 14px;border-radius:6px;font-size:14px;font-family:'Courier New',monospace;letter-spacing:1px;"">{password}</code>
+            <code style=""background:{CorTexto};color:{CorCanvas};padding:6px 14px;border-radius:6px;font-size:14px;font-family:'JetBrains Mono','Courier New',monospace;letter-spacing:1px;"">{E(password)}</code>
           </td>
         </tr>
       </table>
@@ -153,17 +154,17 @@ namespace SGEEP.Web.Services
         /// </summary>
         public static string TabelaInfo(string rotulo, string valor, string? corValor = null, string? tamanhoValor = null)
         {
-            var estiloValor = $"font-weight:700;{(corValor != null ? $"color:{corValor};" : "")}{(tamanhoValor != null ? $"font-size:{tamanhoValor};" : "font-size:15px;")}";
-            return $@"<table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:20px 0;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;overflow:hidden;"">
+            var estiloValor = $"font-weight:600;color:{(corValor ?? CorTexto)};font-size:{(tamanhoValor ?? "15px")};letter-spacing:-0.3px;";
+            return $@"<table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:20px 0;border-radius:8px;background:{CorSuperficieCard};border:1px solid {CorHairline};overflow:hidden;"">
   <tr>
     <td style=""padding:16px 20px;"">
       <table cellpadding=""0"" cellspacing=""0"" role=""presentation"">
         <tr>
           <td style=""padding-right:16px;vertical-align:middle;"">
-            <span style=""font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">{rotulo}</span>
+            <span style=""font-size:12px;color:{CorTextoSecundario};font-weight:600;text-transform:uppercase;letter-spacing:0.6px;"">{E(rotulo)}</span>
           </td>
           <td style=""vertical-align:middle;"">
-            <span style=""{estiloValor}"">{valor}</span>
+            <span style=""{estiloValor}"">{E(valor)}</span>
           </td>
         </tr>
       </table>
@@ -179,11 +180,11 @@ namespace SGEEP.Web.Services
         {
             return $@"<table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:20px 0;"">
   <tr>
-    <td style=""background:#fffbeb;border:1px solid #fde68a;border-radius:8px;border-left:4px solid #f59e0b;padding:14px 18px;"">
+    <td style=""background:{CorSuperficieSoft};border:1px solid {CorHairline};border-radius:8px;border-left:3px solid {CorAviso};padding:14px 18px;"">
       <table cellpadding=""0"" cellspacing=""0"" role=""presentation"">
         <tr>
-          <td style=""vertical-align:middle;padding-right:10px;font-size:18px;"">&#9888;&#65039;</td>
-          <td style=""vertical-align:middle;color:{CorAviso};font-size:14px;font-weight:500;line-height:1.5;"">{mensagem}</td>
+          <td style=""vertical-align:middle;padding-right:10px;font-size:16px;color:{CorAviso};"">&#9888;&#65039;</td>
+          <td style=""vertical-align:middle;color:{CorBody};font-size:14px;font-weight:500;line-height:1.5;"">{E(mensagem)}</td>
         </tr>
       </table>
     </td>
@@ -196,14 +197,14 @@ namespace SGEEP.Web.Services
         /// </summary>
         public static string BadgeEstado(string texto, string tipo)
         {
-            var (cor, fundo, borda) = tipo switch
+            var (cor, fundo) = tipo switch
             {
-                "sucesso" => (CorSucesso, "#f0fdf4", "#bbf7d0"),
-                "erro" => (CorErro, "#fef2f2", "#fecaca"),
-                "info" => (CorPrimaria, "#eff6ff", "#bfdbfe"),
-                _ => (CorTexto, "#f8fafc", "#e2e8f0")
+                "sucesso" => (CorSucesso, "rgba(16, 185, 129, 0.12)"),
+                "erro" => (CorErro, "rgba(239, 68, 68, 0.12)"),
+                "info" => (CorTexto, CorSuperficieCard),
+                _ => (CorTexto, CorSuperficieCard)
             };
-            return $@"<span style=""display:inline-block;background:{fundo};color:{cor};border:1px solid {borda};padding:3px 12px;border-radius:20px;font-size:14px;font-weight:700;"">{texto}</span>";
+            return $@"<span style=""display:inline-block;background:{fundo};color:{cor};padding:3px 12px;border-radius:9999px;font-size:13px;font-weight:500;"">{E(texto)}</span>";
         }
 
         /// <summary>
@@ -213,9 +214,9 @@ namespace SGEEP.Web.Services
         {
             return $@"<table width=""100%"" cellpadding=""0"" cellspacing=""0"" role=""presentation"" style=""margin:20px 0;"">
   <tr>
-    <td style=""background:#f8fafc;border-left:4px solid {CorPrimaria};border-radius:0 8px 8px 0;padding:16px 20px;"">
-      <p style=""margin:0 0 6px 0;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;"">{rotulo}</p>
-      <p style=""margin:0;font-size:14px;color:{CorTexto};line-height:1.6;"">{comentario}</p>
+    <td style=""background:{CorSuperficieCard};border-left:3px solid {CorTexto};border-radius:0 8px 8px 0;padding:16px 20px;"">
+      <p style=""margin:0 0 6px 0;font-size:12px;color:{CorTextoSecundario};font-weight:600;text-transform:uppercase;letter-spacing:0.6px;"">{E(rotulo)}</p>
+      <p style=""margin:0;font-size:14px;color:{CorBody};line-height:1.6;"">{E(comentario)}</p>
     </td>
   </tr>
 </table>";
