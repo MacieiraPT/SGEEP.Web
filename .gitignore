@@ -366,3 +366,10 @@ FodyWeavers.xsd
 **/appsettings.json
 **/appsettings.*.json
 !**/appsettings.json.example
+
+# Locally-installed agent skills (installed via `npx skills add`). Each
+# contributor re-runs the install locally so the reference content isn't
+# version-controlled.
+.agents/
+.claude/skills/
+skills-lock.json

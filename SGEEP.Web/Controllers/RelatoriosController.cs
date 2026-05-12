@@ -263,24 +263,37 @@ namespace SGEEP.Web.Controllers
         }
 
         // GET: Relatorios/Download/5
-        public async Task<IActionResult> Download(int id)
+        public async Task<IActionResult> Download(int id, CancellationToken ct)
         {
             var relatorio = await _context.Relatorios
                 .Include(r => r.Estagio)
-                .FirstOrDefaultAsync(r => r.Id == id);
+                .FirstOrDefaultAsync(r => r.Id == id, ct);
 
             if (relatorio == null || relatorio.FicheiroPath == null)
                 return NotFound();
 
             if (!await TemAcesso(relatorio.Estagio)) return Forbid();
 
-            var bytes = await _storage.DescarregarAsync(relatorio.FicheiroPath);
-
-            var extensao = Path.GetExtension(relatorio.FicheiroPath).ToLower();
+            var extensao = Path.GetExtension(relatorio.FicheiroPath).ToLowerInvariant();
             var contentType = extensao == ".pdf" ? "application/pdf"
                 : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-            return File(bytes, contentType, $"{relatorio.Titulo}{extensao}");
+            // Stream em vez de carregar para memória: relatórios podem ter até 10MB
+            // e podem haver downloads concorrentes. FileStreamResult fecha o stream
+            // automaticamente depois da resposta ser enviada.
+            var stream = await _storage.AbrirAsync(relatorio.FicheiroPath, ct);
+            return File(stream, contentType, SanitizarNomeFicheiro(relatorio.Titulo, extensao));
+        }
+
+        // Remove caracteres não permitidos em nomes de ficheiro (do utilizador
+        // chega texto livre via `Titulo`). Mantemos letras/dígitos/espaços/-_.
+        private static string SanitizarNomeFicheiro(string titulo, string extensao)
+        {
+            var limpo = new string(titulo.Where(c =>
+                char.IsLetterOrDigit(c) || c == ' ' || c == '-' || c == '_' || c == '.').ToArray()).Trim();
+            if (string.IsNullOrEmpty(limpo)) limpo = "relatorio";
+            if (limpo.Length > 80) limpo = limpo.Substring(0, 80);
+            return limpo + extensao;
         }
 
         private async Task<bool> TemAcesso(Estagio estagio)
