@@ -19,6 +19,7 @@ namespace SGEEP.Web.Controllers
         private readonly IEmailService _emailService;
         private readonly IFicheiroStorageService _storage;
         private readonly ILogger<RelatoriosController> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public RelatoriosController(
             ApplicationDbContext context,
@@ -26,7 +27,8 @@ namespace SGEEP.Web.Controllers
             AuditoriaService auditoria,
             IEmailService emailService,
             IFicheiroStorageService storage,
-            ILogger<RelatoriosController> logger)
+            ILogger<RelatoriosController> logger,
+            IWebHostEnvironment env)
         {
             _context = context;
             _userManager = userManager;
@@ -34,6 +36,7 @@ namespace SGEEP.Web.Controllers
             _emailService = emailService;
             _storage = storage;
             _logger = logger;
+            _env = env;
         }
 
         // GET: Relatorios/Index/5 (por estágio)
@@ -143,7 +146,13 @@ namespace SGEEP.Web.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Falha ao enviar ficheiro de relatório para storage (Estágio #{EstagioId})", vm.EstagioId);
-                    ModelState.AddModelError("Ficheiro", "Erro ao enviar o ficheiro. Tente novamente.");
+                    // Em Development mostra-se o erro real ao programador. Em
+                    // produção fica uma mensagem genérica para não vazar detalhes
+                    // de infraestrutura.
+                    var mensagem = _env.IsDevelopment()
+                        ? $"Erro ao enviar o ficheiro: {ex.GetType().Name}: {ex.Message}"
+                        : "Erro ao enviar o ficheiro. Tente novamente.";
+                    ModelState.AddModelError("Ficheiro", mensagem);
                     return View(vm);
                 }
 
