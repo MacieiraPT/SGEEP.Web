@@ -40,7 +40,21 @@ namespace SGEEP.Web.Services
             if (string.IsNullOrWhiteSpace(_settings.NomeBucket))
                 throw new InvalidOperationException("Supabase:NomeBucket não está configurado.");
 
-            var baseUrl = _settings.Url.TrimEnd('/') + "/storage/v1";
+            // Aceita várias formas que os utilizadores podem copiar do dashboard:
+            //   https://<ref>.supabase.co
+            //   https://<ref>.supabase.co/
+            //   https://<ref>.supabase.co/storage/v1
+            //   https://<ref>.supabase.co/storage/v1/s3      (endpoint S3)
+            // Normalizamos para a base de storage REST (https://<ref>/storage/v1)
+            // que é o que o cliente Supabase.Storage espera.
+            var url = _settings.Url.Trim().TrimEnd('/');
+            var idx = url.IndexOf("/storage/v1", StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0) url = url.Substring(0, idx);
+            var baseUrl = url + "/storage/v1";
+
+            _logger.LogInformation("Supabase Storage base URL: {BaseUrl} (bucket: {Bucket})",
+                baseUrl, _settings.NomeBucket);
+
             var headers = new Dictionary<string, string>
             {
                 ["Authorization"] = $"Bearer {_settings.ServiceKey}",
