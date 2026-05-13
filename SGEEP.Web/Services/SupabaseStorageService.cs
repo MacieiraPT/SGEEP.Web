@@ -135,6 +135,13 @@ namespace SGEEP.Web.Services
                     throw new InvalidOperationException(
                         $"Supabase não devolveu signed URL para '{caminhoFicheiro}'.");
 
+                // Supabase.Storage 2.4.1 anexa SEMPRE um `?` literal ao URL
+                // assinado, mesmo quando não há query a acrescentar. Esse `?`
+                // fica colado ao fim da assinatura JWT (`...psiU?`) e o servidor
+                // recusa o token com "Failed to base64url decode the signature".
+                // Removemos qualquer `?`/`&` à direita antes de seguir.
+                url = url.TrimEnd('?', '&');
+
                 if (!string.IsNullOrWhiteSpace(nomeDownload))
                 {
                     var separator = url.Contains('?') ? '&' : '?';
