@@ -263,6 +263,12 @@ namespace SGEEP.Web.Controllers
         }
 
         // GET: Relatorios/Download/5
+        //
+        // Em vez de fazer proxy ao ficheiro através do servidor, validamos a
+        // autorização e redirecionamos o browser para um signed URL de vida
+        // curta. O Supabase Storage serve o ficheiro diretamente, com o nome
+        // sugerido no Content-Disposition. Vantagens: zero memória/bandwidth no
+        // servidor, autorização continua server-side, URL expira em segundos.
         public async Task<IActionResult> Download(int id, CancellationToken ct)
         {
             var relatorio = await _context.Relatorios
@@ -275,14 +281,12 @@ namespace SGEEP.Web.Controllers
             if (!await TemAcesso(relatorio.Estagio)) return Forbid();
 
             var extensao = Path.GetExtension(relatorio.FicheiroPath).ToLowerInvariant();
-            var contentType = extensao == ".pdf" ? "application/pdf"
-                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            var nomeDownload = SanitizarNomeFicheiro(relatorio.Titulo, extensao);
 
-            // Stream em vez de carregar para memória: relatórios podem ter até 10MB
-            // e podem haver downloads concorrentes. FileStreamResult fecha o stream
-            // automaticamente depois da resposta ser enviada.
-            var stream = await _storage.AbrirAsync(relatorio.FicheiroPath, ct);
-            return File(stream, contentType, SanitizarNomeFicheiro(relatorio.Titulo, extensao));
+            var urlAssinado = await _storage.GerarUrlDownloadAsync(
+                relatorio.FicheiroPath, nomeDownload, ct);
+
+            return Redirect(urlAssinado);
         }
 
         // Remove caracteres não permitidos em nomes de ficheiro (do utilizador

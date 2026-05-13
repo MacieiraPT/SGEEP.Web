@@ -1,66 +1,88 @@
-using Amazon.Runtime;
-using Amazon.S3;
-using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using SGEEP.Web.Models;
+using Supabase.Storage;
+using SupabaseClient = Supabase.Storage.Client;
+using SupabaseFileOptions = Supabase.Storage.FileOptions;
 
 namespace SGEEP.Web.Services
 {
-    public class SupabaseStorageService : IFicheiroStorageService, IDisposable
+    /// <summary>
+    /// Cliente de Storage do Supabase, usado para guardar e disponibilizar os
+    /// relatórios dos estágios. Usa o package oficial <c>Supabase.Storage</c>
+    /// — ver https://github.com/supabase-community/storage-csharp.
+    ///
+    /// Decisões:
+    /// • Autentica como service_role (bypassa RLS). O segredo nunca é exposto
+    ///   ao cliente — só é usado neste serviço, registado como Singleton.
+    /// • Downloads são feitos via signed URL (TTL curto) e redirect HTTP, não
+    ///   via streaming proxy. Poupa memória + bandwidth e mantém a autorização
+    ///   no servidor (o link só é gerado depois de validar permissões).
+    /// • Uploads continuam server-mediados porque queremos correr validações
+    ///   (magic bytes, tamanho) antes de aceitar o ficheiro.
+    /// </summary>
+    public class SupabaseStorageService : IFicheiroStorageService
     {
-        private readonly IAmazonS3 _s3;
-        private readonly string _nomeBucket;
+        private readonly SupabaseClient _storage;
+        private readonly SupabaseSettings _settings;
         private readonly ILogger<SupabaseStorageService> _logger;
 
         public SupabaseStorageService(
             IOptions<SupabaseSettings> opcoes,
             ILogger<SupabaseStorageService> logger)
         {
-            var config = opcoes.Value;
+            _settings = opcoes.Value;
             _logger = logger;
 
-            if (string.IsNullOrWhiteSpace(config.EndpointS3))
-                throw new InvalidOperationException("Supabase:EndpointS3 não está configurado.");
-            if (string.IsNullOrWhiteSpace(config.AccessKeyId) || string.IsNullOrWhiteSpace(config.SecretAccessKey))
-                throw new InvalidOperationException("Supabase:AccessKeyId/SecretAccessKey não estão configurados.");
-            if (string.IsNullOrWhiteSpace(config.NomeBucket))
+            if (string.IsNullOrWhiteSpace(_settings.Url))
+                throw new InvalidOperationException("Supabase:Url não está configurado.");
+            if (string.IsNullOrWhiteSpace(_settings.ServiceKey))
+                throw new InvalidOperationException("Supabase:ServiceKey não está configurado.");
+            if (string.IsNullOrWhiteSpace(_settings.NomeBucket))
                 throw new InvalidOperationException("Supabase:NomeBucket não está configurado.");
 
-            _nomeBucket = config.NomeBucket;
-
-            var credenciais = new BasicAWSCredentials(config.AccessKeyId, config.SecretAccessKey);
-            _s3 = new AmazonS3Client(credenciais, new AmazonS3Config
+            var baseUrl = _settings.Url.TrimEnd('/') + "/storage/v1";
+            var headers = new Dictionary<string, string>
             {
-                ServiceURL = config.EndpointS3,
-                ForcePathStyle = true,
-                AuthenticationRegion = config.Regiao,
-                Timeout = TimeSpan.FromSeconds(Math.Max(1, config.TimeoutSegundos)),
-                MaxErrorRetry = 2
-            });
+                ["Authorization"] = $"Bearer {_settings.ServiceKey}",
+                ["apikey"] = _settings.ServiceKey
+            };
+
+            _storage = new SupabaseClient(baseUrl, headers);
         }
 
         public async Task<string> EnviarAsync(Stream conteudo, string nomeUnico, string contentType, CancellationToken ct = default)
         {
-            var request = new PutObjectRequest
+            // O cliente Supabase.Storage (v2) aceita byte[] mas não Stream para
+            // upload. Os relatórios estão limitados a 10MB pelo controller, por
+            // isso o buffer temporário cabe em memória sem problema. Se um dia
+            // o limite subir, substituir por upload em chunks via HTTP direto.
+            byte[] bytes;
+            using (var ms = new MemoryStream())
             {
-                BucketName = _nomeBucket,
-                Key = nomeUnico,
-                InputStream = conteudo,
-                ContentType = contentType,
-                // O caller é dono do stream original (IFormFile.OpenReadStream());
-                // não deixar o SDK fechá-lo permite-nos lidar com `using` no controller.
-                AutoCloseStream = false
-            };
+                await conteudo.CopyToAsync(ms, ct);
+                bytes = ms.ToArray();
+            }
 
             try
             {
-                await _s3.PutObjectAsync(request, ct);
+                await _storage.From(_settings.NomeBucket).Upload(
+                    bytes,
+                    nomeUnico,
+                    new SupabaseFileOptions
+                    {
+                        ContentType = contentType,
+                        // CacheControl em segundos. Os relatórios não mudam após
+                        // upload (path é Guid+extensão), por isso podem ser cached.
+                        CacheControl = "3600",
+                        Upsert = false
+                    });
+
                 return nomeUnico;
             }
-            catch (AmazonS3Exception ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Falha ao enviar ficheiro {Key} para o bucket {Bucket} (StatusCode={Status})",
-                    nomeUnico, _nomeBucket, ex.StatusCode);
+                _logger.LogError(ex, "Falha ao enviar ficheiro {Key} para o bucket {Bucket}",
+                    nomeUnico, _settings.NomeBucket);
                 throw;
             }
         }
@@ -69,41 +91,43 @@ namespace SGEEP.Web.Services
         {
             try
             {
-                await _s3.DeleteObjectAsync(_nomeBucket, caminhoFicheiro, ct);
+                await _storage.From(_settings.NomeBucket).Remove(new List<string> { caminhoFicheiro });
             }
-            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            catch (Exception ex)
             {
-                // Idempotente: apagar algo que já não existe não é um erro a propagar
-                // — o objetivo (deixar de existir) está cumprido.
-                _logger.LogDebug("Ficheiro {Key} já não existia no bucket {Bucket}.", caminhoFicheiro, _nomeBucket);
-            }
-            catch (AmazonS3Exception ex)
-            {
-                _logger.LogError(ex, "Falha ao apagar ficheiro {Key} no bucket {Bucket} (StatusCode={Status})",
-                    caminhoFicheiro, _nomeBucket, ex.StatusCode);
+                // Operação idempotente do ponto de vista do caller: log + propaga
+                // para que o caller decida (no Create, apagamos para fazer rollback
+                // de ficheiro órfão e não queremos esconder falhas).
+                _logger.LogError(ex, "Falha ao apagar ficheiro {Key} no bucket {Bucket}",
+                    caminhoFicheiro, _settings.NomeBucket);
                 throw;
             }
         }
 
-        public async Task<Stream> AbrirAsync(string caminhoFicheiro, CancellationToken ct = default)
+        public async Task<string> GerarUrlDownloadAsync(string caminhoFicheiro, string? nomeDownload = null, CancellationToken ct = default)
         {
             try
             {
-                var response = await _s3.GetObjectAsync(_nomeBucket, caminhoFicheiro, ct);
-                // Devolvemos o stream da resposta diretamente. FileStreamResult na
-                // ASP.NET Core encarrega-se de o fechar depois de servir a resposta.
-                // Não buffer-amos para memória — relatórios podem ter até 10MB e o
-                // servidor pode ter dezenas de downloads concorrentes.
-                return response.ResponseStream;
+                var url = await _storage.From(_settings.NomeBucket).CreateSignedUrl(
+                    caminhoFicheiro,
+                    _settings.SignedUrlSegundos,
+                    transformOptions: null,
+                    downloadOptions: nomeDownload is null
+                        ? null
+                        : new DownloadOptions { FileName = nomeDownload });
+
+                if (string.IsNullOrWhiteSpace(url))
+                    throw new InvalidOperationException(
+                        $"Supabase não devolveu signed URL para '{caminhoFicheiro}'.");
+
+                return url;
             }
-            catch (AmazonS3Exception ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Falha ao abrir ficheiro {Key} no bucket {Bucket} (StatusCode={Status})",
-                    caminhoFicheiro, _nomeBucket, ex.StatusCode);
+                _logger.LogError(ex, "Falha ao gerar signed URL para {Key} no bucket {Bucket}",
+                    caminhoFicheiro, _settings.NomeBucket);
                 throw;
             }
         }
-
-        public void Dispose() => _s3?.Dispose();
     }
 }
