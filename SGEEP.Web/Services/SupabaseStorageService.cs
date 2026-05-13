@@ -108,23 +108,19 @@ namespace SGEEP.Web.Services
         {
             try
             {
-                // Supabase.Storage 2.0.0 CreateSignedUrl não aceita um parâmetro
-                // para o nome do download — esse comportamento é controlado pela
-                // query string `?download=<nome>` no URL servido. Geramos o URL e
-                // anexamos manualmente quando temos um nome a sugerir ao browser.
+                // Supabase.Storage 2.4+ aceita DownloadOptions; a biblioteca trata
+                // de codificar o filename na query string `?download=` do URL.
                 var url = await _storage.From(_settings.NomeBucket).CreateSignedUrl(
                     caminhoFicheiro,
-                    _settings.SignedUrlSegundos);
+                    _settings.SignedUrlSegundos,
+                    transformOptions: null,
+                    downloadOptions: nomeDownload is null
+                        ? null
+                        : new DownloadOptions { FileName = nomeDownload });
 
                 if (string.IsNullOrWhiteSpace(url))
                     throw new InvalidOperationException(
                         $"Supabase não devolveu signed URL para '{caminhoFicheiro}'.");
-
-                if (!string.IsNullOrWhiteSpace(nomeDownload))
-                {
-                    var separator = url.Contains('?') ? '&' : '?';
-                    url = $"{url}{separator}download={Uri.EscapeDataString(nomeDownload)}";
-                }
 
                 return url;
             }
