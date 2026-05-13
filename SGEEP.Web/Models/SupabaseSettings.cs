@@ -2,19 +2,26 @@ namespace SGEEP.Web.Models
 {
     public class SupabaseSettings
     {
-        public string EndpointS3 { get; set; } = "";
-        public string AccessKeyId { get; set; } = "";
-        public string SecretAccessKey { get; set; } = "";
+        // URL do projeto Supabase, p.ex. "https://abcxyz.supabase.co".
+        // Visível em Dashboard → Project Settings → API → Project URL.
+        public string Url { get; set; } = "";
+
+        // service_role API key. Bypassa RLS; usar APENAS no servidor, nunca enviar
+        // ao cliente. Dashboard → Project Settings → API → service_role secret.
+        // Preferir variável de ambiente: Supabase__ServiceKey
+        public string ServiceKey { get; set; } = "";
+
+        // Bucket onde os relatórios são guardados. Deve existir no projeto
+        // Supabase (criar manualmente em Dashboard → Storage) e estar como privado.
         public string NomeBucket { get; set; } = "relatorios";
 
-        // Região S3 — Supabase exige uma região válida no header de autenticação,
-        // mas o endpoint é o do projeto, não o da AWS. O default ("eu-west-1")
-        // serve para projetos europeus; ajuste em appsettings se necessário.
-        public string Regiao { get; set; } = "eu-west-1";
+        // Tempo de vida (segundos) dos URLs assinados de download. 60s é
+        // suficiente para o utilizador clicar e o browser iniciar a descarga;
+        // mais que isso aumenta a janela em que o link pode ser partilhado.
+        public int SignedUrlSegundos { get; set; } = 60;
 
-        // Timeout para operações de upload/download. Os ficheiros têm um limite
-        // duro de 10MB por relatório, portanto 60s é generoso e protege contra
-        // requests pendurados.
+        // Timeout (segundos) para operações de upload contra o Supabase. Os
+        // ficheiros têm um limite de 10MB no controller, 60s é generoso.
         public int TimeoutSegundos { get; set; } = 60;
     }
 }

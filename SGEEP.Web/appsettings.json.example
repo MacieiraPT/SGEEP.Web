@@ -21,19 +21,19 @@
     "EmailRemetente": ""
   },
   "Supabase": {
-    // Endpoint S3 do projeto Supabase. Formato:
-    //   https://<project-ref>.supabase.co/storage/v1/s3
-    // (Settings → API → S3 Connection no dashboard Supabase.)
-    "EndpointS3": "",
-    // Credenciais S3 do bucket (Storage → S3 Access Keys no dashboard).
-    // NUNCA cometer; preferir variáveis de ambiente:
-    //   Supabase__AccessKeyId, Supabase__SecretAccessKey
-    "AccessKeyId": "",
-    "SecretAccessKey": "",
+    // URL do projeto Supabase. Dashboard → Project Settings → API → Project URL.
+    "Url": "https://<project-ref>.supabase.co",
+    // service_role key. NUNCA cometer; preferir variável de ambiente:
+    //   Supabase__ServiceKey
+    // Dashboard → Project Settings → API → service_role secret.
+    "ServiceKey": "",
+    // Bucket onde os relatórios são guardados. Deve existir no Supabase e ser
+    // privado (Dashboard → Storage → New bucket → "Private bucket").
     "NomeBucket": "relatorios",
-    // Região configurada no projeto Supabase (eu-west-1, us-east-1, ...).
-    "Regiao": "eu-west-1",
-    // Timeout (segundos) para upload/download. Default: 60.
+    // Tempo de vida (segundos) dos URLs assinados de download. 60s é
+    // suficiente para o browser iniciar a descarga.
+    "SignedUrlSegundos": 60,
+    // Timeout (segundos) para upload contra o Supabase.
     "TimeoutSegundos": 60
   },
   "Seed": {
