@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -9,18 +9,18 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="MailKit" Version="4.15.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.24" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.24" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.24" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.27" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.27" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.27" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.27" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.8" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
-    <PackageReference Include="QuestPDF" Version="2024.12.3" />
-    <!-- Supabase Storage client (official). Replaces the AWSSDK.S3-based
-         implementation; gives us signed-URL downloads so the browser fetches
-         straight from Supabase instead of through this process. -->
-    <PackageReference Include="Supabase.Storage" Version="2.0.0" />
+    <PackageReference Include="QuestPDF" Version="2026.5.0" />
+    <!-- Supabase Storage client (official). 2.4.x drops the broken
+         Microsoft.NET.Test.Sdk transitive dep that 2.0.0 shipped, and
+         restores DownloadOptions { FileName } on CreateSignedUrl. -->
+    <PackageReference Include="Supabase.Storage" Version="2.4.1" />
   </ItemGroup>
 
   <ItemGroup>
