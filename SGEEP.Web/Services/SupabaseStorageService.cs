@@ -40,7 +40,21 @@ namespace SGEEP.Web.Services
             if (string.IsNullOrWhiteSpace(_settings.NomeBucket))
                 throw new InvalidOperationException("Supabase:NomeBucket não está configurado.");
 
-            var baseUrl = _settings.Url.TrimEnd('/') + "/storage/v1";
+            // Aceita várias formas que os utilizadores podem copiar do dashboard:
+            //   https://<ref>.supabase.co
+            //   https://<ref>.supabase.co/
+            //   https://<ref>.supabase.co/storage/v1
+            //   https://<ref>.supabase.co/storage/v1/s3      (endpoint S3)
+            // Normalizamos para a base de storage REST (https://<ref>/storage/v1)
+            // que é o que o cliente Supabase.Storage espera.
+            var url = _settings.Url.Trim().TrimEnd('/');
+            var idx = url.IndexOf("/storage/v1", StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0) url = url.Substring(0, idx);
+            var baseUrl = url + "/storage/v1";
+
+            _logger.LogInformation("Supabase Storage base URL: {BaseUrl} (bucket: {Bucket})",
+                baseUrl, _settings.NomeBucket);
+
             var headers = new Dictionary<string, string>
             {
                 ["Authorization"] = $"Bearer {_settings.ServiceKey}",
@@ -108,21 +122,24 @@ namespace SGEEP.Web.Services
         {
             try
             {
-                // Supabase.Storage 2.4+ aceita DownloadOptions; a biblioteca trata
-                // de codificar o filename na query string `?download=` do URL.
+                // Não passamos DownloadOptions ao cliente: a versão 2.4.1 do
+                // Supabase.Storage anexa `?download=...` mesmo que o URL já tenha
+                // `?token=...`, produzindo um URL inválido com dois `?` e o token
+                // a falhar como "Invalid Compact JWS". Geramos o URL assinado
+                // limpo e anexamos `&download=<nome>` à mão.
                 var url = await _storage.From(_settings.NomeBucket).CreateSignedUrl(
                     caminhoFicheiro,
-                    _settings.SignedUrlSegundos,
-                    transformOptions: null,
-                    // IStorageFileApi nomeia o quarto parâmetro `options`
-                    // (não `downloadOptions`, embora o tipo seja DownloadOptions).
-                    options: nomeDownload is null
-                        ? null
-                        : new DownloadOptions { FileName = nomeDownload });
+                    _settings.SignedUrlSegundos);
 
                 if (string.IsNullOrWhiteSpace(url))
                     throw new InvalidOperationException(
                         $"Supabase não devolveu signed URL para '{caminhoFicheiro}'.");
+
+                if (!string.IsNullOrWhiteSpace(nomeDownload))
+                {
+                    var separator = url.Contains('?') ? '&' : '?';
+                    url = $"{url}{separator}download={Uri.EscapeDataString(nomeDownload)}";
+                }
 
                 return url;
             }
