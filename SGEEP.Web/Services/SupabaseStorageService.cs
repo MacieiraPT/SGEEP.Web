@@ -122,21 +122,24 @@ namespace SGEEP.Web.Services
         {
             try
             {
-                // Supabase.Storage 2.4+ aceita DownloadOptions; a biblioteca trata
-                // de codificar o filename na query string `?download=` do URL.
+                // Não passamos DownloadOptions ao cliente: a versão 2.4.1 do
+                // Supabase.Storage anexa `?download=...` mesmo que o URL já tenha
+                // `?token=...`, produzindo um URL inválido com dois `?` e o token
+                // a falhar como "Invalid Compact JWS". Geramos o URL assinado
+                // limpo e anexamos `&download=<nome>` à mão.
                 var url = await _storage.From(_settings.NomeBucket).CreateSignedUrl(
                     caminhoFicheiro,
-                    _settings.SignedUrlSegundos,
-                    transformOptions: null,
-                    // IStorageFileApi nomeia o quarto parâmetro `options`
-                    // (não `downloadOptions`, embora o tipo seja DownloadOptions).
-                    options: nomeDownload is null
-                        ? null
-                        : new DownloadOptions { FileName = nomeDownload });
+                    _settings.SignedUrlSegundos);
 
                 if (string.IsNullOrWhiteSpace(url))
                     throw new InvalidOperationException(
                         $"Supabase não devolveu signed URL para '{caminhoFicheiro}'.");
+
+                if (!string.IsNullOrWhiteSpace(nomeDownload))
+                {
+                    var separator = url.Contains('?') ? '&' : '?';
+                    url = $"{url}{separator}download={Uri.EscapeDataString(nomeDownload)}";
+                }
 
                 return url;
             }
