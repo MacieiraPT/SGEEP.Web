@@ -114,7 +114,9 @@ namespace SGEEP.Web.Services
                     caminhoFicheiro,
                     _settings.SignedUrlSegundos,
                     transformOptions: null,
-                    downloadOptions: nomeDownload is null
+                    // IStorageFileApi nomeia o quarto parâmetro `options`
+                    // (não `downloadOptions`, embora o tipo seja DownloadOptions).
+                    options: nomeDownload is null
                         ? null
                         : new DownloadOptions { FileName = nomeDownload });
 
